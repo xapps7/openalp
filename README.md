@@ -27,6 +27,8 @@ OpenALP addresses this with machine-first artifacts (`.alp`, `.alpb`), determini
 - Landing page: `web/landing.html`
 - Browser runner: `web/index.html`
 - OpenALP-rendered webpage: `web/alp_site.html`
+- Agent bootstrap page: `web/agent.html`
+- Agent manifest: `agent-manifest.json`
 - Agent context: `docs/AGENT_CONTEXT.md`
 - Interop pack: `docs/INTEROP_PACK.md`
 - Install guide: `INSTALL.md`
@@ -101,6 +103,7 @@ Open directly in browser:
 - `web/index.html` (run `.alpb` source in browser)
 - `web/alp_site.html` (render HTML emitted by OpenALP program)
 - `web/landing.html` (project landing)
+- `web/agent.html` (agent-targeted bootstrap instructions)
 
 ## Reference Docs
 
@@ -118,11 +121,3 @@ Open directly in browser:
 
 OpenALP is licensed under **Apache License 2.0**.
 See `LICENSE` and `docs/LICENSING.md`.
-
-## Tested Status
-
-Current verified baseline:
-
-1. `./scripts/launch_check.sh` passes
-2. Automated tests pass (`19/19`)
-3. Release artifact install path works via `./scripts/setup.sh`

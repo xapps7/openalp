@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OpenALP Agent Bootstrap</title>
+    <style>
+      body { margin: 0; font-family: "JetBrains Mono", monospace; background: #0b1220; color: #e6efff; }
+      .wrap { max-width: 980px; margin: 0 auto; padding: 22px 16px 36px; }
+      h1 { margin: 0 0 10px; font-size: 28px; }
+      h2 { margin: 18px 0 8px; font-size: 16px; color: #9db7e0; }
+      p, li { color: #c7d6ee; line-height: 1.5; }
+      pre { background: #07101d; border: 1px solid #223554; border-radius: 10px; padding: 12px; overflow-x: auto; }
+      code { color: #9ef8d4; }
+      .muted { color: #89a2c9; }
+      a { color: #8cd6ff; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>OpenALP Agent Bootstrap</h1>
+      <p class="muted">Agent-targeted install and execution contract.</p>
+
+      <h2>Dependencies</h2>
+      <ul>
+        <li>python3 >= 3.10</li>
+        <li>No external packages required</li>
+      </ul>
+
+      <h2>Install (from release)</h2>
+      <pre><code>curl -L -o openalp-v0.1.1.tar.gz https://github.com/xapps7/openalp/releases/download/v0.1.1/openalp-v0.1.1.tar.gz
+tar -xzf openalp-v0.1.1.tar.gz
+cd openalp
+./scripts/setup.sh</code></pre>
+
+      <h2>Run contract</h2>
+      <pre><code>export PYTHONPATH="$PWD"
+python3 -m alp.cli validate samples/add.alp
+python3 -m alp.cli checksum verify samples/add.alp
+python3 -m alp.cli sign verify samples/add.alp --key samples/dev_hmac.key
+python3 -m alp.cli handshake validate samples/hello_ref_vm.json
+python3 -m alp.cli run samples/hello.alp</code></pre>
+
+      <h2>Machine-readable manifest</h2>
+      <p><a href="../agent-manifest.json">agent-manifest.json</a></p>
+    </div>
+  </body>
+</html>

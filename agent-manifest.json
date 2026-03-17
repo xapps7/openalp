@@ -1,0 +1,35 @@
+{
+  "name": "OpenALP",
+  "protocol": "Open Agentic Language Protocol",
+  "version": "0.1.1",
+  "artifacts": [".alp", ".alpb", ".sha256.json", ".sig.json", ".rsa.sig.json", "ALP-Hello"],
+  "dependencies": {
+    "python": ">=3.10",
+    "external_packages": []
+  },
+  "install": {
+    "release_tarball": [
+      "curl -L -o openalp-v0.1.1.tar.gz https://github.com/xapps7/openalp/releases/download/v0.1.1/openalp-v0.1.1.tar.gz",
+      "tar -xzf openalp-v0.1.1.tar.gz",
+      "cd openalp",
+      "./scripts/setup.sh"
+    ],
+    "git_clone": [
+      "git clone https://github.com/xapps7/openalp.git",
+      "cd openalp",
+      "./scripts/setup.sh"
+    ]
+  },
+  "execution_order": [
+    "python3 -m alp.cli validate <module.alp>",
+    "python3 -m alp.cli checksum verify <module.alp>",
+    "python3 -m alp.cli sign verify <module.alp> --key <shared_key>",
+    "python3 -m alp.cli handshake validate <hello.json>",
+    "python3 -m alp.cli run <module.alp>"
+  ],
+  "entrypoints": {
+    "agent_page": "web/agent.html",
+    "install_guide": "INSTALL.md",
+    "cli": "alp/cli.py"
+  }
+}
