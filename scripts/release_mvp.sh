@@ -20,7 +20,7 @@ cp -R "$ROOT/docs" "$TMPDIR/openalp/"
 cp -R "$ROOT/scripts" "$TMPDIR/openalp/"
 cp -R "$ROOT/tests" "$TMPDIR/openalp/"
 cp -R "$ROOT/web" "$TMPDIR/openalp/"
-cp "$ROOT/README.md" "$ROOT/pyproject.toml" "$ROOT/LICENSE" "$ROOT/CHANGELOG.md" "$ROOT/.gitignore" "$TMPDIR/openalp/"
+cp "$ROOT/README.md" "$ROOT/INSTALL.md" "$ROOT/pyproject.toml" "$ROOT/LICENSE" "$ROOT/CHANGELOG.md" "$ROOT/.gitignore" "$TMPDIR/openalp/"
 find "$TMPDIR/openalp" -depth -type d -name "__pycache__" -exec rm -rf {} \;
 
 cat > "$TMPDIR/openalp/RELEASE.txt" <<REL

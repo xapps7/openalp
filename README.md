@@ -36,10 +36,40 @@ OpenALP addresses this with machine-first artifacts (`.alp`, `.alpb`), determini
 - Changelog: `CHANGELOG.md`
 - License: `LICENSE`
 
+## Dependencies
+
+OpenALP MVP dependencies are intentionally minimal:
+
+1. Python `3.10+`
+2. No third-party Python packages (standard library only)
+
 ## Quick Start
 
 ```bash
 cd alp_mvp
+./scripts/setup.sh
+export PYTHONPATH="$PWD"
+python3 -m alp.cli run samples/hello.alp
+```
+
+## CLI Install (Public)
+
+Install from GitHub release tarball:
+
+```bash
+curl -L -o openalp-v0.1.1.tar.gz https://github.com/xapps7/openalp/releases/download/v0.1.1/openalp-v0.1.1.tar.gz
+tar -xzf openalp-v0.1.1.tar.gz
+cd openalp
+./scripts/setup.sh
+export PYTHONPATH="$PWD"
+python3 -m alp.cli run samples/hello.alp
+```
+
+Install from git clone:
+
+```bash
+git clone https://github.com/xapps7/openalp.git
+cd openalp
 ./scripts/setup.sh
 export PYTHONPATH="$PWD"
 python3 -m alp.cli run samples/hello.alp
@@ -88,3 +118,11 @@ Open directly in browser:
 
 OpenALP is licensed under **Apache License 2.0**.
 See `LICENSE` and `docs/LICENSING.md`.
+
+## Tested Status
+
+Current verified baseline:
+
+1. `./scripts/launch_check.sh` passes
+2. Automated tests pass (`19/19`)
+3. Release artifact install path works via `./scripts/setup.sh`

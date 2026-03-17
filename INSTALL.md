@@ -16,6 +16,27 @@ cd openalp
 ./scripts/setup.sh
 ```
 
+## CLI Install From Public Release
+
+```bash
+curl -L -o openalp-v0.1.1.tar.gz https://github.com/xapps7/openalp/releases/download/v0.1.1/openalp-v0.1.1.tar.gz
+tar -xzf openalp-v0.1.1.tar.gz
+cd openalp
+./scripts/setup.sh
+export PYTHONPATH="$PWD"
+python3 -m alp.cli run samples/hello.alp
+```
+
+## CLI Install From Git
+
+```bash
+git clone https://github.com/xapps7/openalp.git
+cd openalp
+./scripts/setup.sh
+export PYTHONPATH="$PWD"
+python3 -m alp.cli run samples/hello.alp
+```
+
 ## Manual Setup
 
 ```bash
@@ -31,4 +52,13 @@ python3 -m alp.cli run samples/hello.alp
 tar -xzf openalp-v0.1.1.tar.gz
 cd openalp
 ./scripts/setup.sh
+```
+
+## Verification
+
+```bash
+export PYTHONPATH="$PWD"
+python3 -m alp.cli validate samples/add.alp
+python3 -m alp.cli run samples/hello.alp
+./scripts/launch_check.sh
 ```
