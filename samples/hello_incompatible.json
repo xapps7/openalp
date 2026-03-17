@@ -1,0 +1,6 @@
+{
+  "protocol": "ALP",
+  "version": "0.2",
+  "features": ["vm-stack-v2"],
+  "targets": ["unknown-vm"]
+}

@@ -1,0 +1,10 @@
+.DS_Store
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+/dist/
+/samples/hello_demo.alp
+/samples/hello_from_raw.alp
+/tmp/

@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OpenALP Rendered Site</title>
+    <style>
+      :root {
+        --bg: #f4efe4;
+        --ink: #1d1d1b;
+        --muted: #5a5a52;
+        --line: #d4ccb9;
+        --card: rgba(255,255,255,0.76);
+        --accent: #d85c2f;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Fraunces", Georgia, serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top right, rgba(216,92,47,0.18), transparent 32%),
+          radial-gradient(circle at bottom left, rgba(58,120,87,0.16), transparent 28%),
+          linear-gradient(180deg, #f8f4ea 0%, #f2ecde 100%);
+      }
+      .wrap { max-width: 1080px; margin: 0 auto; padding: 28px 18px 50px; }
+      .top { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-bottom: 18px; }
+      .title { font-size: clamp(28px, 4vw, 54px); line-height: 0.95; margin: 0; }
+      .sub { color: var(--muted); font-family: "Space Grotesk", "Segoe UI", sans-serif; }
+      .grid { display: grid; grid-template-columns: 0.95fr 1.05fr; gap: 16px; }
+      .card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; backdrop-filter: blur(8px); }
+      .head { padding: 12px 16px; border-bottom: 1px solid var(--line); font: 700 12px/1.2 "Space Grotesk", sans-serif; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; }
+      textarea { width: 100%; min-height: 430px; border: 0; resize: vertical; padding: 16px; background: transparent; color: var(--ink); font: 13px/1.55 "JetBrains Mono", monospace; outline: none; }
+      .actions { display: flex; gap: 8px; flex-wrap: wrap; padding: 12px 16px 16px; }
+      button { border: 1px solid var(--line); background: #fff8ef; border-radius: 999px; padding: 10px 14px; cursor: pointer; font: 700 13px/1.2 "Space Grotesk", sans-serif; }
+      button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+      .preview-shell { padding: 18px; }
+      .preview {
+        min-height: 230px;
+        border: 1px dashed var(--line);
+        border-radius: 18px;
+        padding: 18px;
+        background: rgba(255,255,255,0.62);
+      }
+      .preview .hero h1 { margin: 0 0 10px; font-size: clamp(32px, 5vw, 56px); line-height: 0.96; }
+      .preview .hero p { margin: 0 0 16px; color: var(--muted); font: 500 16px/1.7 "Space Grotesk", sans-serif; }
+      .preview .hero button { background: #1d1d1b; color: #fff; border-color: #1d1d1b; }
+      .meta { display: grid; gap: 12px; padding: 0 18px 18px; font: 13px/1.55 "JetBrains Mono", monospace; }
+      .mono { white-space: pre-wrap; }
+      @media (max-width: 920px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="top">
+        <div>
+          <h1 class="title">A Web Page Rendered By OpenALP</h1>
+          <div class="sub">The left side is raw `.alpb`. The right side is HTML emitted by the program and rendered in-browser.</div>
+        </div>
+        <button class="primary" id="renderBtn">Render OpenALP Page</button>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <div class="head">OpenALP Source (.alpb)</div>
+          <textarea id="src"></textarea>
+          <div class="actions">
+            <button class="primary" id="renderBtn2">Render</button>
+            <button id="resetBtn">Reset Demo</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="head">Rendered Output</div>
+          <div class="preview-shell">
+            <div id="preview" class="preview"></div>
+          </div>
+          <div class="meta">
+            <div><strong>Status:</strong> <span id="status">idle</span></div>
+            <div><strong>Output chars:</strong> <span id="charCount">0</span></div>
+            <div><strong>Trace:</strong><div id="trace" class="mono"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script id="alpbSource" type="text/plain"></script>
+    <script>
+      const htmlDemo = '<section class="hero"><h1>Hello from OpenALP</h1><p>This page is rendered from an OpenALP program that prints HTML.</p><button>Launch Machine-First</button></section>';
+      function htmlToAlpb(html) {
+        const lines = ['# OpenALP page source (.alpb)', '# Prints HTML that can be rendered in a browser host', 'entry=0', ''];
+        for (const ch of html) {
+          lines.push(`0x01 ${ch.charCodeAt(0)} 0 0`);
+          lines.push('0x0B 0 0 0');
+        }
+        lines.push('0x08 0 0 0');
+        return lines.join('\n');
+      }
+
+      const defaultSource = htmlToAlpb(htmlDemo);
+      const src = document.getElementById('src');
+      const preview = document.getElementById('preview');
+      const status = document.getElementById('status');
+      const charCount = document.getElementById('charCount');
+      const trace = document.getElementById('trace');
+      src.value = defaultSource;
+      document.getElementById('alpbSource').textContent = defaultSource;
+
+      function parseNum(token) {
+        const t = token.trim().toLowerCase();
+        const v = t.startsWith('0x') ? Number.parseInt(t, 16) : Number.parseInt(t, 10);
+        if (!Number.isInteger(v) || v < 0 || v > 255) throw new Error(`Invalid byte: ${token}`);
+        return v;
+      }
+      function parseProgram(text) {
+        let entry = 0; const instructions = [];
+        const lines = text.split(/\r?\n/);
+        for (let i = 0; i < lines.length; i++) {
+          const raw = lines[i].split('#', 1)[0].trim();
+          if (!raw) continue;
+          if (raw.toLowerCase().startsWith('entry=')) {
+            if (instructions.length) throw new Error(`Line ${i + 1}: entry must come first`);
+            entry = Number.parseInt(raw.split('=', 2)[1].trim(), 10);
+            if (!Number.isInteger(entry) || entry < 0) throw new Error(`Line ${i + 1}: invalid entry`);
+            continue;
+          }
+          const parts = raw.split(/\s+/);
+          if (parts.length !== 4) throw new Error(`Line ${i + 1}: expected opcode a b c`);
+          instructions.push({ op: parseNum(parts[0]), a: parseNum(parts[1]), b: parseNum(parts[2]), c: parseNum(parts[3]) });
+        }
+        if (!instructions.length) throw new Error('No instructions');
+        if (entry >= instructions.length) throw new Error('Entry out of range');
+        return { entry, instructions };
+      }
+      function asI8(v) { return v > 127 ? v - 256 : v; }
+      function need(stack, n, op) { if (stack.length < n) throw new Error(`Stack underflow in ${op}`); }
+      function run(text) {
+        const mod = parseProgram(text);
+        const stack = []; const out = []; const steps = [];
+        let ip = mod.entry;
+        for (let step = 1; step <= 100000; step++) {
+          if (ip < 0 || ip >= mod.instructions.length) throw new Error(`IP out of range: ${ip}`);
+          const curr = ip; const inst = mod.instructions[ip]; ip += 1;
+          switch (inst.op) {
+            case 0x00: break;
+            case 0x01: stack.push(asI8(inst.a)); break;
+            case 0x02: need(stack,2,'ADD'); { const r = stack.pop(); const l = stack.pop(); stack.push(l + r); } break;
+            case 0x03: need(stack,2,'SUB'); { const r = stack.pop(); const l = stack.pop(); stack.push(l - r); } break;
+            case 0x04: need(stack,2,'MUL'); { const r = stack.pop(); const l = stack.pop(); stack.push(l * r); } break;
+            case 0x05: need(stack,2,'DIV'); { const r = stack.pop(); const l = stack.pop(); if (r === 0) throw new Error('Division by zero'); stack.push(Math.floor(l / r)); } break;
+            case 0x06: ip = inst.a; break;
+            case 0x07: need(stack,1,'JZ'); { const v = stack.pop(); if (v === 0) ip = inst.a; } break;
+            case 0x08: return { output: out.join(''), trace: steps };
+            case 0x09: need(stack,1,'DUP'); stack.push(stack[stack.length - 1]); break;
+            case 0x0A: need(stack,1,'POP'); stack.pop(); break;
+            case 0x0B: need(stack,1,'PRINT_CHAR'); { const v = stack.pop(); if (v < 0 || v > 255) throw new Error(`PRINT_CHAR expects 0..255, got ${v}`); out.push(String.fromCharCode(v)); } break;
+            default: throw new Error(`Unknown opcode 0x${inst.op.toString(16)}`);
+          }
+          if (steps.length < 16) steps.push(`step=${step} ip=${curr} op=0x${inst.op.toString(16).padStart(2, '0')} stack=[${stack.join(',')}]`);
+        }
+        throw new Error('Max steps exceeded');
+      }
+      function renderNow() {
+        try {
+          const result = run(src.value);
+          preview.innerHTML = result.output;
+          status.textContent = 'rendered';
+          charCount.textContent = String(result.output.length);
+          trace.textContent = result.trace.join('\n');
+        } catch (err) {
+          preview.textContent = '';
+          status.textContent = `error: ${err.message || err}`;
+          charCount.textContent = '0';
+          trace.textContent = String(err.message || err);
+        }
+      }
+      document.getElementById('renderBtn').onclick = renderNow;
+      document.getElementById('renderBtn2').onclick = renderNow;
+      document.getElementById('resetBtn').onclick = () => { src.value = defaultSource; renderNow(); };
+      renderNow();
+    </script>
+  </body>
+</html>

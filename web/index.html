@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OpenALP Browser Runner</title>
+    <style>
+      :root {
+        --bg: #0a0f1a;
+        --panel: #121a29;
+        --panel-2: #1a2538;
+        --ink: #edf2ff;
+        --muted: #8ea2c9;
+        --accent: #00d3a7;
+        --accent-2: #ffd166;
+        --danger: #ff5f7a;
+        --border: #2a3855;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+        color: var(--ink);
+        min-height: 100vh;
+        background:
+          radial-gradient(1200px 500px at 80% -10%, rgba(0, 211, 167, 0.18), transparent),
+          radial-gradient(900px 450px at 10% 110%, rgba(255, 209, 102, 0.14), transparent),
+          linear-gradient(160deg, #060a12 0%, #0a0f1a 45%, #111a2c 100%);
+      }
+      .wrap {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 28px 18px 36px;
+      }
+      .hero {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+      h1 {
+        margin: 0;
+        font-size: clamp(28px, 4vw, 46px);
+        letter-spacing: 0.3px;
+      }
+      .sub {
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .badge {
+        color: #07131c;
+        background: linear-gradient(90deg, var(--accent), #42e9d1);
+        padding: 7px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 14px;
+      }
+      .card {
+        background: linear-gradient(180deg, rgba(255,255,255,0.03), transparent 20%), var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        overflow: hidden;
+      }
+      .card h2 {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        color: var(--muted);
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.02);
+      }
+      textarea {
+        width: 100%;
+        height: 560px;
+        border: 0;
+        padding: 14px;
+        margin: 0;
+        resize: vertical;
+        background: transparent;
+        color: var(--ink);
+        font-family: "JetBrains Mono", "Menlo", monospace;
+        font-size: 13px;
+        line-height: 1.5;
+        outline: none;
+      }
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 12px 14px;
+        border-top: 1px solid var(--border);
+        background: var(--panel-2);
+      }
+      button {
+        border: 1px solid var(--border);
+        background: #15213a;
+        color: var(--ink);
+        padding: 8px 12px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      button:hover { border-color: var(--accent); }
+      .run { background: linear-gradient(90deg, #00d3a7, #35e7cf); color: #062018; border: 0; }
+      .mono {
+        font-family: "JetBrains Mono", "Menlo", monospace;
+        font-size: 13px;
+        white-space: pre-wrap;
+      }
+      .pane {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--border);
+      }
+      .label {
+        color: var(--muted);
+        font-size: 12px;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .ok { color: var(--accent); }
+      .err { color: var(--danger); }
+      .stack {
+        display: inline-block;
+        min-height: 24px;
+        background: #0b1221;
+        border: 1px solid #2b3852;
+        border-radius: 8px;
+        padding: 6px 8px;
+      }
+      @media (max-width: 900px) {
+        .grid { grid-template-columns: 1fr; }
+        textarea { height: 360px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="hero">
+        <div>
+          <h1>OpenALP Browser Runner</h1>
+          <div class="sub">Write raw OpenALP `.alpb`, execute in browser, inspect output/trace.</div>
+        </div>
+        <div class="badge">No Backend Needed</div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <h2>Source (.alpb)</h2>
+          <textarea id="src"></textarea>
+          <div class="controls">
+            <button class="run" id="runBtn">Run Program</button>
+            <button id="helloBtn">Load Hello Demo</button>
+            <button id="clearBtn">Clear</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Execution</h2>
+          <div class="pane">
+            <div class="label">Status</div>
+            <div id="status" class="mono">idle</div>
+          </div>
+          <div class="pane">
+            <div class="label">Text Output</div>
+            <div id="output" class="mono"></div>
+          </div>
+          <div class="pane">
+            <div class="label">Top Of Stack</div>
+            <div id="top" class="mono stack"></div>
+          </div>
+          <div class="pane">
+            <div class="label">Trace (first 20 steps)</div>
+            <div id="trace" class="mono"></div>
+          </div>
+          <div class="pane">
+            <div class="label">Opcode Legend</div>
+            <div class="mono">00 NOP, 01 PUSH_CONST, 02 ADD, 03 SUB, 04 MUL, 05 DIV,
+06 JMP, 07 JZ, 08 HALT, 09 DUP, 0A POP, 0B PRINT_CHAR</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const helloDemo = `# OpenALP raw source (.alpb)
+entry=0
+
+0x01 72 0 0
+0x0B 0 0 0
+0x01 101 0 0
+0x0B 0 0 0
+0x01 108 0 0
+0x0B 0 0 0
+0x01 108 0 0
+0x0B 0 0 0
+0x01 111 0 0
+0x0B 0 0 0
+0x01 10 0 0
+0x0B 0 0 0
+0x08 0 0 0
+`;
+
+      const src = document.getElementById("src");
+      const statusEl = document.getElementById("status");
+      const outputEl = document.getElementById("output");
+      const topEl = document.getElementById("top");
+      const traceEl = document.getElementById("trace");
+
+      document.getElementById("helloBtn").onclick = () => {
+        src.value = helloDemo;
+      };
+      document.getElementById("clearBtn").onclick = () => {
+        src.value = "";
+        statusEl.textContent = "idle";
+        outputEl.textContent = "";
+        topEl.textContent = "";
+        traceEl.textContent = "";
+      };
+      document.getElementById("runBtn").onclick = () => runProgram(src.value);
+      src.value = helloDemo;
+
+      function parseNum(token) {
+        const t = token.trim().toLowerCase();
+        const v = t.startsWith("0x") ? Number.parseInt(t, 16) : Number.parseInt(t, 10);
+        if (!Number.isInteger(v) || v < 0 || v > 255) {
+          throw new Error(`Invalid byte: ${token}`);
+        }
+        return v;
+      }
+
+      function parseProgram(text) {
+        let entry = 0;
+        const instructions = [];
+        const lines = text.split(/\r?\n/);
+
+        for (let i = 0; i < lines.length; i++) {
+          const raw = lines[i].split("#", 1)[0].trim();
+          if (!raw) continue;
+
+          if (raw.toLowerCase().startsWith("entry=")) {
+            if (instructions.length > 0) {
+              throw new Error(`Line ${i + 1}: entry must be declared before instructions`);
+            }
+            entry = Number.parseInt(raw.split("=", 2)[1].trim(), 10);
+            if (!Number.isInteger(entry) || entry < 0) {
+              throw new Error(`Line ${i + 1}: invalid entry value`);
+            }
+            continue;
+          }
+
+          const parts = raw.split(/\s+/);
+          if (parts.length !== 4) {
+            throw new Error(`Line ${i + 1}: expected 4 numbers (opcode a b c)`);
+          }
+
+          instructions.push({
+            op: parseNum(parts[0]),
+            a: parseNum(parts[1]),
+            b: parseNum(parts[2]),
+            c: parseNum(parts[3]),
+          });
+        }
+
+        if (instructions.length === 0) throw new Error("No instructions");
+        if (entry >= instructions.length) throw new Error("Entry out of range");
+        return { entry, instructions };
+      }
+
+      function asI8(v) {
+        return v > 127 ? v - 256 : v;
+      }
+
+      function requireStack(stack, n, op) {
+        if (stack.length < n) throw new Error(`Stack underflow in ${op}`);
+      }
+
+      function runProgram(text) {
+        try {
+          const mod = parseProgram(text);
+          const stack = [];
+          const out = [];
+          const trace = [];
+          let ip = mod.entry;
+          let steps = 0;
+          const maxSteps = 100000;
+
+          while (steps < maxSteps) {
+            if (ip < 0 || ip >= mod.instructions.length) throw new Error(`IP out of range: ${ip}`);
+            const inst = mod.instructions[ip];
+            const curr = ip;
+            ip += 1;
+            steps += 1;
+
+            switch (inst.op) {
+              case 0x00:
+                break;
+              case 0x01:
+                stack.push(asI8(inst.a));
+                break;
+              case 0x02: {
+                requireStack(stack, 2, "ADD");
+                const rhs = stack.pop();
+                const lhs = stack.pop();
+                stack.push(lhs + rhs);
+                break;
+              }
+              case 0x03: {
+                requireStack(stack, 2, "SUB");
+                const rhs = stack.pop();
+                const lhs = stack.pop();
+                stack.push(lhs - rhs);
+                break;
+              }
+              case 0x04: {
+                requireStack(stack, 2, "MUL");
+                const rhs = stack.pop();
+                const lhs = stack.pop();
+                stack.push(lhs * rhs);
+                break;
+              }
+              case 0x05: {
+                requireStack(stack, 2, "DIV");
+                const rhs = stack.pop();
+                const lhs = stack.pop();
+                if (rhs === 0) throw new Error("Division by zero");
+                stack.push(Math.floor(lhs / rhs));
+                break;
+              }
+              case 0x06:
+                ip = inst.a;
+                break;
+              case 0x07: {
+                requireStack(stack, 1, "JZ");
+                const v = stack.pop();
+                if (v === 0) ip = inst.a;
+                break;
+              }
+              case 0x08:
+                statusEl.innerHTML = `<span class='ok'>halted</span> in ${steps} steps`;
+                outputEl.textContent = out.join("");
+                topEl.textContent = stack.length ? String(stack[stack.length - 1]) : "null";
+                traceEl.textContent = trace.slice(0, 20).join("\n");
+                return;
+              case 0x09:
+                requireStack(stack, 1, "DUP");
+                stack.push(stack[stack.length - 1]);
+                break;
+              case 0x0a:
+                requireStack(stack, 1, "POP");
+                stack.pop();
+                break;
+              case 0x0b: {
+                requireStack(stack, 1, "PRINT_CHAR");
+                const v = stack.pop();
+                if (v < 0 || v > 255) throw new Error(`PRINT_CHAR expects 0..255, got ${v}`);
+                out.push(String.fromCharCode(v));
+                break;
+              }
+              default:
+                throw new Error(`Unknown opcode 0x${inst.op.toString(16)}`);
+            }
+
+            trace.push(`step=${steps} ip=${curr} op=0x${inst.op.toString(16).padStart(2, "0")} stack=[${stack.join(",")}]`);
+          }
+          throw new Error(`Max steps exceeded (${maxSteps})`);
+        } catch (err) {
+          statusEl.innerHTML = `<span class='err'>error</span>`;
+          outputEl.textContent = "";
+          topEl.textContent = "";
+          traceEl.textContent = String(err.message || err);
+        }
+      }
+    </script>
+  </body>
+</html>
