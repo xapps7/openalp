@@ -8,7 +8,8 @@ Machine-readable execution context for agents integrating OpenALP.
 
 - `*.alp` executable module
 - `*.alpb` raw source (optional authoring form)
-- `*.alpp.json` ALP-Bundle (single-file agent exchange package)
+- `*.alpp.json` ALP-Bundle JSON (single-file agent exchange package)
+- `*.alppb` ALP-Bundle binary (compact agent transport package)
 - `*.sha256.json` checksum sidecar
 - `*.sig.json` HMAC signature sidecar
 - `*.rsa.sig.json` demo RSA signature sidecar
@@ -44,7 +45,7 @@ For bundle execution:
 cd openalp
 ./scripts/setup.sh
 export PYTHONPATH="$PWD"
-python3 -m alp.cli bundle run --bundle samples/add.alpp.json --key samples/dev_hmac.key
+python3 -m alp.cli bundle run --bundle samples/add.alppb --key samples/dev_hmac.key
 ./scripts/quality_gate.sh
 ```
 

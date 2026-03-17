@@ -9,7 +9,7 @@ Agent-first discovery order:
 1. `agent-manifest.json` (machine-readable install + execution contract)
 2. `web/agent.html` (agent bootstrap page)
 3. `INSTALL.md` (CLI install commands)
-4. `samples/add.alpp.json` (single-file machine-native execution bundle)
+4. `samples/add.alppb` (compact binary machine-native execution bundle)
 
 Agent-first install (release tarball):
 
@@ -26,7 +26,7 @@ Agent-first run (bundle contract, minimum human-language dependency):
 
 ```bash
 export PYTHONPATH="$PWD"
-python3 -m alp.cli bundle run --bundle samples/add.alpp.json --key samples/dev_hmac.key
+python3 -m alp.cli bundle run --bundle samples/add.alppb --key samples/dev_hmac.key
 ```
 
 ## Why Open Agentic Language Protocol is needed
@@ -38,13 +38,13 @@ Current agent ecosystems rely heavily on natural-language prompts as an executio
 3. weak interoperability between foreign agent runtimes,
 4. trust and reproducibility gaps.
 
-OpenALP addresses this with machine-first artifacts (`.alp`, `.alpb`, `.alpp.json`), deterministic execution, and verifiable exchange bundles.
+OpenALP addresses this with machine-first artifacts (`.alp`, `.alpb`, `.alppb`), deterministic execution, and verifiable exchange bundles.
 
 ## What OpenALP provides
 
 1. Portable executable format: `.alp`
 2. Raw low-level authoring format: `.alpb`
-3. Agent bundle format: `.alpp.json` (module + trust sidecars + hello)
+3. Agent bundle format: `.alppb` (compact binary bundle, module + trust sidecars + hello)
 4. Deterministic stack runtime
 5. Validation + checksum + signature gates
 6. Capability negotiation (`ALP-Hello`)

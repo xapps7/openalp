@@ -235,6 +235,7 @@ def cmd_bundle_create(args: argparse.Namespace) -> int:
             signature_path=pathlib.Path(args.signature),
             signature_key_path=pathlib.Path(args.key),
             out_path=pathlib.Path(args.out),
+            binary=args.binary,
         )
     except (OSError, json.JSONDecodeError, BundleError, ValueError) as exc:
         print(f"ERROR: {exc}")
@@ -354,6 +355,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_bundle_create.add_argument("--signature", required=True)
     p_bundle_create.add_argument("--key", required=True)
     p_bundle_create.add_argument("--out", required=True)
+    p_bundle_create.add_argument("--binary", action="store_true", help="write compact binary bundle (.alppb)")
     p_bundle_create.set_defaults(func=cmd_bundle_create)
 
     p_bundle_run = p_bundle_sub.add_parser("run", help="verify and run an ALP bundle")

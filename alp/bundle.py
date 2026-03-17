@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import json
+import zlib
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -9,6 +10,8 @@ from .format import ALPFormatError, parse_module
 from .handshake import HandshakeError, compatibility, parse_hello
 from .integrity import verify_manifest, verify_signature_manifest
 from .vm import run_module
+
+_BUNDLE_BIN_MAGIC = b"ALPPB1\x00"
 
 
 class BundleError(ValueError):
@@ -33,6 +36,28 @@ def _decode_bytes(data: str) -> bytes:
     return base64.b64decode(data.encode("ascii"))
 
 
+def _read_bundle_payload(bundle_path: Path) -> dict:
+    raw = bundle_path.read_bytes()
+    if raw.startswith(_BUNDLE_BIN_MAGIC):
+        try:
+            payload = zlib.decompress(raw[len(_BUNDLE_BIN_MAGIC) :])
+            return json.loads(payload.decode("utf-8"))
+        except Exception as exc:  # pragma: no cover
+            raise BundleError("invalid binary bundle") from exc
+    try:
+        return json.loads(raw.decode("utf-8"))
+    except Exception as exc:  # pragma: no cover
+        raise BundleError("invalid json bundle") from exc
+
+
+def _write_bundle_payload(bundle: dict, out_path: Path, binary: bool = False) -> None:
+    if binary:
+        payload = json.dumps(bundle, separators=(",", ":"), sort_keys=True).encode("utf-8")
+        out_path.write_bytes(_BUNDLE_BIN_MAGIC + zlib.compress(payload, level=9))
+        return
+    out_path.write_text(json.dumps(bundle, indent=2) + "\n")
+
+
 def create_bundle(
     module_path: Path,
     hello_path: Path,
@@ -40,6 +65,7 @@ def create_bundle(
     signature_path: Path,
     signature_key_path: Path,
     out_path: Path,
+    binary: bool = False,
 ) -> None:
     payload = {
         "bundle_version": "1",
@@ -50,11 +76,11 @@ def create_bundle(
         "signature_manifest": json.loads(signature_path.read_text()),
         "signature_key_hint": signature_key_path.name,
     }
-    out_path.write_text(json.dumps(payload, indent=2) + "\n")
+    _write_bundle_payload(payload, out_path, binary=binary)
 
 
 def run_bundle(bundle_path: Path, signature_key_path: Path, max_steps: int = 100_000) -> BundleResult:
-    bundle = json.loads(bundle_path.read_text())
+    bundle = _read_bundle_payload(bundle_path)
 
     try:
         module_bytes = _decode_bytes(bundle["module_b64"])

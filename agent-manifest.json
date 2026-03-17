@@ -2,7 +2,7 @@
   "name": "OpenALP",
   "protocol": "Open Agentic Language Protocol",
   "version": "0.1.1",
-  "artifacts": [".alp", ".alpb", ".alpp.json", ".sha256.json", ".sig.json", ".rsa.sig.json", "ALP-Hello"],
+  "artifacts": [".alp", ".alpb", ".alpp.json", ".alppb", ".sha256.json", ".sig.json", ".rsa.sig.json", "ALP-Hello"],
   "dependencies": {
     "python": ">=3.10",
     "external_packages": []
@@ -21,7 +21,7 @@
     ]
   },
   "execution_order": [
-    "python3 -m alp.cli bundle run --bundle <module.alpp.json> --key <shared_key>",
+    "python3 -m alp.cli bundle run --bundle <module.alppb> --key <shared_key>",
     "python3 -m alp.cli validate <module.alp>",
     "python3 -m alp.cli checksum verify <module.alp>",
     "python3 -m alp.cli sign verify <module.alp> --key <shared_key>",

@@ -7,7 +7,8 @@
 - `alp bundle create`
 - `alp bundle run`
 3. Added bundle test coverage (`tests/test_bundle.py`).
-4. Added sample bundle file (`samples/add.alpp.json`).
+4. Added sample bundle files (`samples/add.alpp.json`, `samples/add.alppb`).
+5. Added compact binary bundle format support (`.alppb`) with auto-detect runtime path.
 
 ## Why this matters
 
