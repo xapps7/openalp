@@ -1,12 +1,26 @@
 # OpenALP MVP
 
-OpenALP MVP is a machine-first Agent Language Protocol prototype with:
+OpenALP is an **Open Agentic Language Protocol** prototype focused on machine-to-machine execution.
 
-- Binary module format (`.alp`) + raw machine source (`.alpb`)
-- Minimal verifier
-- Deterministic stack VM runtime
-- CLI: `validate`, `run`, `inspect`, `decompile`, `build-raw`, `checksum`, `sign`, `sign-rsa`, `determinism`, `handshake`
-- Conformance-style tests and benchmark harness
+## Why Open Agentic Language Protocol is needed
+
+Current agent ecosystems rely heavily on natural-language prompts as an execution medium. That causes:
+
+1. high translation overhead from text to actions,
+2. non-deterministic interpretation across agent stacks,
+3. weak interoperability between foreign agent runtimes,
+4. trust and reproducibility gaps.
+
+OpenALP addresses this with machine-first artifacts (`.alp`, `.alpb`), deterministic execution, and verifiable exchange bundles.
+
+## What OpenALP provides
+
+1. Portable executable format: `.alp`
+2. Raw low-level authoring format: `.alpb`
+3. Deterministic stack runtime
+4. Validation + checksum + signature gates
+5. Capability negotiation (`ALP-Hello`)
+6. Browser demos for quick evaluation
 
 ## Public Launch Assets
 
@@ -16,6 +30,7 @@ OpenALP MVP is a machine-first Agent Language Protocol prototype with:
 - Agent context: `docs/AGENT_CONTEXT.md`
 - Interop pack: `docs/INTEROP_PACK.md`
 - Install guide: `INSTALL.md`
+- Licensing details: `docs/LICENSING.md`
 - Git publication guide: `docs/GIT_PUBLICATION.md`
 - Release notes: `docs/RELEASE_NOTES_V0_1_0_MVP.md`
 - Changelog: `CHANGELOG.md`
@@ -68,3 +83,8 @@ Open directly in browser:
 - Hello executable: `samples/hello.alp`
 - Hello raw source: `samples/hello.alpb`
 - Webpage raw source: `samples/webpage.alpb`
+
+## Licensing Notice
+
+This repository is **not open-source licensed**.
+Usage requires explicit written permission from the repository owner. See `LICENSE` and `docs/LICENSING.md`.
