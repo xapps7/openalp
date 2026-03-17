@@ -67,6 +67,13 @@ export PYTHONPATH="$PWD"
 python3 -m alp.cli run samples/hello.alp
 ```
 
+## Agent-First Install Entry
+
+If an autonomous agent is discovering OpenALP from repository contents:
+
+1. Start with `agent-manifest.json` (machine-readable install + execution contract)
+2. Use `web/agent.html` for human-readable agent bootstrap instructions
+
 Install from git clone:
 
 ```bash
