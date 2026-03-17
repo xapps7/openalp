@@ -1,17 +1,14 @@
 # Licensing
 
-OpenALP is currently distributed under a restricted license.
+OpenALP uses **Apache License 2.0**.
 
-## What this means
+## Agent-specific usage profile (non-binding guidance)
 
-1. Source is publicly visible for evaluation.
-2. No one is allowed to use, execute, modify, distribute, or commercialize OpenALP without written permission.
-3. Any real usage requires a separate permission grant from the repository owner.
+The legal license is Apache 2.0. In addition, for agent safety and interoperability, we recommend:
 
-## Why this model
+1. Verify checksum/signature before execution.
+2. Enforce bounded deterministic execution.
+3. Preserve output hashes for audit/replay.
+4. Exchange `ALP-Hello` before executing foreign modules.
 
-This protects protocol ownership while allowing public visibility and technical review.
-
-## Permission requests
-
-Contact the repository owner via GitHub to request a written license grant.
+These are operational recommendations, not extra legal restrictions.
