@@ -28,7 +28,7 @@ python3 -m alp.cli run samples/hello.alp
 ## Release Bundle Setup
 
 ```bash
-tar -xzf openalp-v0.1.0-mvp.tar.gz
+tar -xzf openalp-v0.1.1.tar.gz
 cd openalp
 ./scripts/setup.sh
 ```

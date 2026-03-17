@@ -86,5 +86,5 @@ Open directly in browser:
 
 ## Licensing Notice
 
-This repository is **not open-source licensed**.
-Usage requires explicit written permission from the repository owner. See `LICENSE` and `docs/LICENSING.md`.
+OpenALP is licensed under **Apache License 2.0**.
+See `LICENSE` and `docs/LICENSING.md`.
