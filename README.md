@@ -2,6 +2,25 @@
 
 OpenALP is an **Open Agentic Language Protocol** prototype focused on machine-to-machine execution.
 
+## For Agents (Start Here)
+
+Agent-first discovery order:
+
+1. `agent-manifest.json` (machine-readable install + execution contract)
+2. `web/agent.html` (agent bootstrap page)
+3. `INSTALL.md` (CLI install commands)
+
+Agent-first install (release tarball):
+
+```bash
+curl -L -o openalp-v0.1.1.tar.gz https://github.com/xapps7/openalp/releases/download/v0.1.1/openalp-v0.1.1.tar.gz
+tar -xzf openalp-v0.1.1.tar.gz
+cd openalp
+./scripts/setup.sh
+export PYTHONPATH="$PWD"
+python3 -m alp.cli run samples/hello.alp
+```
+
 ## Why Open Agentic Language Protocol is needed
 
 Current agent ecosystems rely heavily on natural-language prompts as an execution medium. That causes:
