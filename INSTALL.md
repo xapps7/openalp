@@ -1,5 +1,16 @@
 # OpenALP Install
 
+## Agent-First Quick Path (Preferred)
+
+```bash
+curl -L -o openalp-v0.1.1.tar.gz https://github.com/xapps7/openalp/releases/download/v0.1.1/openalp-v0.1.1.tar.gz
+tar -xzf openalp-v0.1.1.tar.gz
+cd openalp
+./scripts/setup.sh
+export PYTHONPATH="$PWD"
+python3 -m alp.cli bundle run --bundle samples/add.alpp.json --key samples/dev_hmac.key
+```
+
 ## Dependencies (MVP)
 
 OpenALP MVP requires only:
@@ -59,6 +70,7 @@ cd openalp
 ```bash
 export PYTHONPATH="$PWD"
 python3 -m alp.cli validate samples/add.alp
+python3 -m alp.cli bundle run --bundle samples/add.alpp.json --key samples/dev_hmac.key
 python3 -m alp.cli run samples/hello.alp
 ./scripts/launch_check.sh
 ```

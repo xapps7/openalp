@@ -19,7 +19,7 @@
   <body>
     <div class="wrap">
       <h1>OpenALP Agent Bootstrap</h1>
-      <p class="muted">Agent-targeted install and execution contract.</p>
+      <p class="muted">Agent-targeted install and execution contract with machine-native bundle priority.</p>
 
       <h2>Dependencies</h2>
       <ul>
@@ -33,7 +33,11 @@ tar -xzf openalp-v0.1.1.tar.gz
 cd openalp
 ./scripts/setup.sh</code></pre>
 
-      <h2>Run contract</h2>
+      <h2>Run contract (preferred)</h2>
+      <pre><code>export PYTHONPATH="$PWD"
+python3 -m alp.cli bundle run --bundle samples/add.alpp.json --key samples/dev_hmac.key</code></pre>
+
+      <h2>Run contract (expanded)</h2>
       <pre><code>export PYTHONPATH="$PWD"
 python3 -m alp.cli validate samples/add.alp
 python3 -m alp.cli checksum verify samples/add.alp

@@ -7,6 +7,7 @@ import pathlib
 import sys
 
 from .decompile import to_python_like
+from .bundle import BundleError, create_bundle, run_bundle
 from .format import ALPFormatError, parse_module
 from .handshake import HandshakeError, compatibility, parse_hello
 from .integrity import (
@@ -225,6 +226,44 @@ def cmd_build_raw(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_bundle_create(args: argparse.Namespace) -> int:
+    try:
+        create_bundle(
+            module_path=pathlib.Path(args.module),
+            hello_path=pathlib.Path(args.hello),
+            checksum_path=pathlib.Path(args.checksum),
+            signature_path=pathlib.Path(args.signature),
+            signature_key_path=pathlib.Path(args.key),
+            out_path=pathlib.Path(args.out),
+        )
+    except (OSError, json.JSONDecodeError, BundleError, ValueError) as exc:
+        print(f"ERROR: {exc}")
+        return 1
+    print(json.dumps({"status": "created", "bundle": args.out}))
+    return 0
+
+
+def cmd_bundle_run(args: argparse.Namespace) -> int:
+    try:
+        result = run_bundle(pathlib.Path(args.bundle), pathlib.Path(args.key), max_steps=args.max_steps)
+    except (OSError, json.JSONDecodeError, BundleError, ValueError) as exc:
+        print(f"ERROR: {exc}")
+        return 1
+    print(
+        json.dumps(
+            {
+                "output": result.output,
+                "top": result.top,
+                "steps": result.steps,
+                "verified_checksum": result.verified_checksum,
+                "verified_signature": result.verified_signature,
+                "compatible": result.compatible,
+            }
+        )
+    )
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="alp", description="ALP MVP CLI")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -304,6 +343,24 @@ def build_parser() -> argparse.ArgumentParser:
     p_build_raw.add_argument("src")
     p_build_raw.add_argument("out")
     p_build_raw.set_defaults(func=cmd_build_raw)
+
+    p_bundle = sub.add_parser("bundle", help="agent bundle tools")
+    p_bundle_sub = p_bundle.add_subparsers(dest="bundle_command", required=True)
+
+    p_bundle_create = p_bundle_sub.add_parser("create", help="create an ALP bundle from module+sidecars")
+    p_bundle_create.add_argument("--module", required=True)
+    p_bundle_create.add_argument("--hello", required=True)
+    p_bundle_create.add_argument("--checksum", required=True)
+    p_bundle_create.add_argument("--signature", required=True)
+    p_bundle_create.add_argument("--key", required=True)
+    p_bundle_create.add_argument("--out", required=True)
+    p_bundle_create.set_defaults(func=cmd_bundle_create)
+
+    p_bundle_run = p_bundle_sub.add_parser("run", help="verify and run an ALP bundle")
+    p_bundle_run.add_argument("--bundle", required=True)
+    p_bundle_run.add_argument("--key", required=True)
+    p_bundle_run.add_argument("--max-steps", type=int, default=100_000)
+    p_bundle_run.set_defaults(func=cmd_bundle_run)
     return parser
 
 

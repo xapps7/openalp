@@ -1,0 +1,27 @@
+{
+  "bundle_version": "1",
+  "module_name": "add.alp",
+  "module_b64": "QUxQMQEAAAAAAAQAAQcAAAEFAAACAAAACAAAAA==",
+  "hello": {
+    "protocol": "ALP",
+    "version": "0.1",
+    "features": [
+      "vm-stack-v1",
+      "deterministic"
+    ],
+    "targets": [
+      "ref-vm"
+    ]
+  },
+  "checksum_manifest": {
+    "algorithm": "sha256",
+    "file": "add.alp",
+    "checksum": "e61e9cff25deeb983a1caf95fcb7f1bd658e530f40867bba881702640d22ff61"
+  },
+  "signature_manifest": {
+    "algorithm": "hmac-sha256",
+    "file": "add.alp",
+    "signature": "4d778a5078ae071f404df1a464a105d8e25a7570fe6af902cb86f2e32d010309"
+  },
+  "signature_key_hint": "dev_hmac.key"
+}
