@@ -90,6 +90,17 @@
   - added [SECURITY_MODEL.md](/Users/cedcoss/Documents/AgentLang/alp_mvp/docs/SECURITY_MODEL.md); flagged 24-bit demo RSA as non-security in `agent-manifest.json`
   - suite now `80` tests passing
 
+### Block 5
+
+- Duration: `1.5h`
+- Focus: Conformance corpus and a build hazard
+- Output:
+  - froze `tests/fixtures/v0.2.0/` with recorded digests and expected execution results
+  - added `tests/test_conformance.py` (11 cases); verified by simulating a format-version bump, which fails the corpus as intended
+  - found and fixed a stale-bytecode hazard: source and `.pyc` shared mtime `1787817261` on the fuse mount, so the suite ran code no longer on disk
+  - gate scripts now export `PYTHONPYCACHEPREFIX`; hazard documented in the runbook
+  - suite now `91` tests passing
+
 ### Total
 
-- `6.0h`
+- `7.5h`

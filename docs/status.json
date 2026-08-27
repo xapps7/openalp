@@ -131,6 +131,13 @@
         "why": "A 24-bit unpadded RSA demo listed as a trust artifact in an agent-facing manifest is a misread waiting to happen."
       },
       {
+        "id": "frozen-conformance-corpus",
+        "title": "Freeze conformance artifacts so the format cannot be validated against itself",
+        "track": "runtime-semantics",
+        "state": "done",
+        "why": "gen_samples.py rewrites samples/ from the code under test and quality_gate.sh runs it first. An encoding change would regenerate the samples to match, the suite would stay green, and every previously published .alp file would silently become unreadable. tests/fixtures/v0.2.0/ is never regenerated."
+      },
+      {
         "id": "identity-spec-draft",
         "title": "Draft agent identity spec: keypair, agent_id derivation, envelope attribution",
         "track": "identity",
@@ -164,5 +171,27 @@
       "decision_owner": "human"
     }
   ],
-  "agent_runbook": "docs/AGENT_RUNBOOK.md"
+  "agent_runbook": "docs/AGENT_RUNBOOK.md",
+  "hazards": [
+    {
+      "id": "stale-bytecode-on-mount",
+      "observed": "2026-08-27",
+      "summary": "The repo sits on a fuse mount with one-second mtime granularity. Python validates cached bytecode against source mtime and size, so a same-length edit landing in the same second as the previous run leaves Python executing stale bytecode. A run can edit code, see tests pass, and commit a change that never ran.",
+      "mitigation": "Gate scripts export PYTHONPYCACHEPREFIX to keep bytecode off the mount. Existing .pyc files under the mount resist deletion; bump source mtimes with touch instead."
+    }
+  ],
+  "agents": [
+    {
+      "name": "OpenALP daily build",
+      "cadence": "weekdays 09:04 IST",
+      "scope": "one open task from week.tasks",
+      "contract": "docs/AGENT_RUNBOOK.md"
+    },
+    {
+      "name": "OpenALP conformance",
+      "cadence": "Mondays 10:04 IST",
+      "scope": "cold-environment checks the in-repo gate structurally cannot perform",
+      "contract": "docs/AGENT_RUNBOOK.md"
+    }
+  ]
 }
