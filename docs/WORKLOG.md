@@ -42,3 +42,42 @@
 ### Total
 
 - `4.5h`
+
+## 2026-08-27
+
+### Block 1
+
+- Duration: `0.4h`
+- Focus: Resume and verification
+- Output:
+  - verified repo state against [HANDOFF_2026-08-27.md](/Users/cedcoss/Documents/AgentLang/alp_mvp/docs/HANDOFF_2026-08-27.md)
+  - ran full suite (26 passing) and `launch_check.sh`
+  - committed the Phase 2C governance/runtime work locally (`070568a`, `a2284e1`), no push
+
+### Block 2
+
+- Duration: `2.6h`
+- Focus: Transport abstraction layer
+- Output:
+  - added [transport-envelope-v0.2.json](/Users/cedcoss/Documents/AgentLang/alp_mvp/spec/transport-envelope-v0.2.json)
+  - added [transport-semantics-v0.2.md](/Users/cedcoss/Documents/AgentLang/alp_mvp/spec/transport-semantics-v0.2.md)
+  - added `alp/transport/`: status model, envelope, transport interface, local reference transport
+  - content-derived envelope identity, logical clock, deterministic backoff
+  - idempotency via receipt store, per-stream contiguous ordering with pending-buffer flush
+  - added CLI: `transport envelope create`, `transport envelope validate`, `transport send`
+  - registered both specs in `spec/index.json`, extended `launch_check.sh`
+
+### Block 3
+
+- Duration: `1.0h`
+- Focus: Tests and docs
+- Output:
+  - added [test_transport.py](/Users/cedcoss/Documents/AgentLang/alp_mvp/tests/test_transport.py) (34 cases)
+  - coverage: identity derivation, tamper and forgery rejection, retry classification, attempt bounds, deadline expiry, idempotent replay, ordering flush, stale rejection, CLI paths
+  - suite now `60` tests passing, `launch_check.sh` ok
+  - updated `agent-manifest.json` and `PHASE2_PROGRESS.md`
+
+### Total
+
+- `4.0h`
+

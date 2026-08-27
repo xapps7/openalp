@@ -24,6 +24,14 @@ from .integrity import (
 from .opcodes import opname
 from .protocol import ProtocolError, RuntimeProfile, validate_runtime_compatibility
 from .rawbuild import RawBuildError, build_alpb_file
+from .transport import (
+    EnvelopeError,
+    LocalTransport,
+    build_envelope_from_file,
+    make_bundle_executor,
+    parse_envelope,
+    validate_envelope,
+)
 from .vm import VMError, run_module
 
 
@@ -288,6 +296,51 @@ def cmd_bundle_run(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_transport_envelope_create(args: argparse.Namespace) -> int:
+    try:
+        envelope = build_envelope_from_file(
+            pathlib.Path(args.payload),
+            stream_id=args.stream,
+            sequence=args.sequence,
+            kind=args.kind,
+            idempotency_key=args.idempotency_key,
+            max_attempts=args.max_attempts,
+            deadline_ms=args.deadline_ms,
+            correlation_id=args.correlation_id,
+        )
+        pathlib.Path(args.out).write_text(envelope.to_json())
+    except (OSError, EnvelopeError, ValueError) as exc:
+        print(f"ERROR: {exc}")
+        return 1
+    print(json.dumps({"status": "created", "envelope": args.out, "envelope_id": envelope.envelope_id}))
+    return 0
+
+
+def cmd_transport_envelope_validate(args: argparse.Namespace) -> int:
+    try:
+        envelope = parse_envelope(json.loads(pathlib.Path(args.path).read_text()))
+        result = validate_envelope(envelope)
+    except (OSError, json.JSONDecodeError, EnvelopeError) as exc:
+        print(f"INVALID: {exc}")
+        return 1
+    print(json.dumps(result))
+    return 0
+
+
+def cmd_transport_send(args: argparse.Namespace) -> int:
+    try:
+        envelope = parse_envelope(json.loads(pathlib.Path(args.envelope).read_text()))
+        transport = LocalTransport(
+            executor=make_bundle_executor(pathlib.Path(args.key), max_steps=args.max_steps)
+        )
+        receipt = transport.send(envelope)
+    except (OSError, json.JSONDecodeError, EnvelopeError) as exc:
+        print(f"ERROR: {exc}")
+        return 1
+    print(json.dumps(receipt.to_dict()))
+    return 0 if receipt.ok else 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="alp", description="ALP MVP CLI")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -393,6 +446,35 @@ def build_parser() -> argparse.ArgumentParser:
     p_bundle_run.add_argument("--key", required=True)
     p_bundle_run.add_argument("--max-steps", type=int, default=100_000)
     p_bundle_run.set_defaults(func=cmd_bundle_run)
+
+    p_transport = sub.add_parser("transport", help="transport envelope and delivery tools")
+    p_transport_sub = p_transport.add_subparsers(dest="transport_command", required=True)
+
+    p_envelope = p_transport_sub.add_parser("envelope", help="execution envelope tools")
+    p_envelope_sub = p_envelope.add_subparsers(dest="envelope_command", required=True)
+
+    p_envelope_create = p_envelope_sub.add_parser("create", help="build an execution envelope around a payload")
+    p_envelope_create.add_argument("--payload", required=True, help="bundle or module file to wrap")
+    p_envelope_create.add_argument("--stream", required=True, help="ordering domain")
+    p_envelope_create.add_argument("--sequence", type=int, required=True)
+    p_envelope_create.add_argument("--kind", choices=["bundle", "module"], default=None)
+    p_envelope_create.add_argument("--idempotency-key", default=None)
+    p_envelope_create.add_argument("--max-attempts", type=int, default=1)
+    p_envelope_create.add_argument("--deadline-ms", type=int, default=None)
+    p_envelope_create.add_argument("--correlation-id", default=None)
+    p_envelope_create.add_argument("--out", required=True)
+    p_envelope_create.set_defaults(func=cmd_transport_envelope_create)
+
+    p_envelope_validate = p_envelope_sub.add_parser("validate", help="validate an execution envelope")
+    p_envelope_validate.add_argument("path")
+    p_envelope_validate.set_defaults(func=cmd_transport_envelope_validate)
+
+    p_transport_send = p_transport_sub.add_parser("send", help="deliver an envelope through the local reference transport")
+    p_transport_send.add_argument("--envelope", required=True)
+    p_transport_send.add_argument("--key", required=True)
+    p_transport_send.add_argument("--max-steps", type=int, default=100_000)
+    p_transport_send.set_defaults(func=cmd_transport_send)
+
     return parser
 
 

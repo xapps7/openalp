@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openalp.dev/spec/transport-envelope-v0.2.json",
+  "title": "ALP Execution Envelope",
+  "description": "Transport-neutral envelope that carries an executable ALP payload plus delivery, ordering, and idempotency metadata. Contains no wall-clock or transport-specific fields so that envelope identity stays deterministic.",
+  "type": "object",
+  "required": [
+    "protocol",
+    "protocol_version",
+    "envelope_version",
+    "envelope_id",
+    "idempotency_key",
+    "stream_id",
+    "sequence",
+    "max_attempts",
+    "payload"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "protocol": {
+      "const": "ALP"
+    },
+    "protocol_version": {
+      "type": "string",
+      "enum": ["0.1", "0.2"],
+      "description": "Governed by spec/alp-governance-v0.2.md. 0.1 is deprecated but accepted."
+    },
+    "envelope_version": {
+      "const": "1"
+    },
+    "envelope_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$",
+      "description": "Content-derived identity: sha256(canonical(stream_id, sequence, payload.content_hash))[:32]. Not random, so the same logical send always produces the same id."
+    },
+    "idempotency_key": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "description": "Dedup key. Defaults to envelope_id. Two envelopes with the same key must execute at most once."
+    },
+    "stream_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "description": "Ordering domain. Ordering is guaranteed within a stream_id and undefined across streams."
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Monotonic position within stream_id. First accepted sequence for a stream establishes the baseline; later envelopes must be contiguous."
+    },
+    "max_attempts": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 16,
+      "description": "Upper bound on execution attempts, including the first."
+    },
+    "deadline_ms": {
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "description": "Logical-time budget for the whole delivery, measured against the transport logical clock, not wall clock. null means no deadline."
+    },
+    "reply_to": {
+      "type": ["string", "null"],
+      "maxLength": 256,
+      "description": "Optional transport-specific return address. Opaque to the runtime and excluded from envelope identity."
+    },
+    "payload": {
+      "type": "object",
+      "required": ["kind", "encoding", "bytes_b64", "content_hash"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["bundle", "module"],
+          "description": "bundle = .alpp.json or .alppb exchange bundle; module = bare .alp module."
+        },
+        "encoding": {
+          "const": "base64"
+        },
+        "bytes_b64": {
+          "type": "string",
+          "minLength": 1
+        },
+        "content_hash": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    },
+    "trace": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "correlation_id": {
+          "type": ["string", "null"],
+          "maxLength": 128
+        },
+        "parent_envelope_id": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-f]{32}$"
+        }
+      }
+    }
+  }
+}

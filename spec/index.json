@@ -19,6 +19,18 @@
       "path": "spec/runtime-semantics-v0.2.md",
       "kind": "runtime-semantics",
       "status": "active"
+    },
+    {
+      "id": "transport-envelope-v0.2",
+      "path": "spec/transport-envelope-v0.2.json",
+      "kind": "transport-schema",
+      "status": "active"
+    },
+    {
+      "id": "transport-semantics-v0.2",
+      "path": "spec/transport-semantics-v0.2.md",
+      "kind": "transport-semantics",
+      "status": "active"
     }
   ]
 }

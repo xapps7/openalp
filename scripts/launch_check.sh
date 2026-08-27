@@ -19,9 +19,13 @@ test -f "$ROOT/web/alp_site.html"
 test -f "$ROOT/web/agent.html"
 test -f "$ROOT/LICENSE"
 test -f "$ROOT/CHANGELOG.md"
+test -f "$ROOT/spec/transport-envelope-v0.2.json"
+test -f "$ROOT/spec/transport-semantics-v0.2.md"
 "$ROOT/scripts/setup.sh" >/tmp/openalp-setup.out
 PYTHONPATH="$ROOT" python3 -m alp.cli bundle run --bundle "$ROOT/samples/add.alpp.json" --key "$ROOT/samples/dev_hmac.key" >/tmp/openalp-bundle-run.out
 PYTHONPATH="$ROOT" python3 -m alp.cli bundle run --bundle "$ROOT/samples/add.alppb" --key "$ROOT/samples/dev_hmac.key" >/tmp/openalp-bundle-run-bin.out
 PYTHONPATH="$ROOT" python3 -m alp.cli runtime validate "$ROOT/samples/add.alp" --hello "$ROOT/samples/hello_ref_vm.json" >/tmp/openalp-runtime-validate.out
+PYTHONPATH="$ROOT" python3 -m alp.cli transport envelope validate "$ROOT/samples/add.alpe.json" >/tmp/openalp-envelope-validate.out
+PYTHONPATH="$ROOT" python3 -m alp.cli transport send --envelope "$ROOT/samples/add.alpe.json" --key "$ROOT/samples/dev_hmac.key" >/tmp/openalp-transport-send.out
 
 echo "launch_check=ok"
