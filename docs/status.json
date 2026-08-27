@@ -17,48 +17,52 @@
   ],
   "tracks": [
     {
-      "id": "governance",
-      "name": "Protocol Governance",
-      "state": "shipped",
-      "shipped_in": "070568a"
-    },
-    {
-      "id": "runtime-semantics",
-      "name": "Deterministic Runtime Semantics",
-      "state": "shipped",
-      "shipped_in": "070568a"
-    },
-    {
-      "id": "transport",
-      "name": "Transport Abstraction Layer",
-      "state": "shipped",
-      "shipped_in": "b42c8c1"
-    },
-    {
-      "id": "identity",
-      "name": "Agent Identity and Trust",
-      "state": "not_started"
+      "id": "representation",
+      "name": "Deterministic machine representation",
+      "pillar": true,
+      "state": "shipped"
     },
     {
       "id": "intent",
-      "name": "Intent Compilation Layer",
+      "name": "Intent compilation",
+      "pillar": true,
       "state": "not_started"
+    },
+    {
+      "id": "verification",
+      "name": "Verifiable execution",
+      "pillar": true,
+      "state": "partial"
+    },
+    {
+      "id": "interop",
+      "name": "Protocol-independent interoperability",
+      "pillar": true,
+      "state": "not_started"
+    },
+    {
+      "id": "transport",
+      "name": "Transport abstraction",
+      "pillar": false,
+      "state": "scheduled_for_removal"
+    },
+    {
+      "id": "identity",
+      "name": "Agent identity and trust",
+      "pillar": false,
+      "state": "rejected"
     },
     {
       "id": "registry",
-      "name": "Package Registry Foundations",
-      "state": "not_started"
-    },
-    {
-      "id": "observability",
-      "name": "Observability and Execution Tracing",
-      "state": "partial",
-      "note": "run --trace and --trace-limit exist; no structured trace export or span model"
+      "name": "Package registry",
+      "pillar": false,
+      "state": "rejected"
     },
     {
       "id": "economics",
-      "name": "Economic Hooks",
-      "state": "not_started"
+      "name": "Economic hooks",
+      "pillar": false,
+      "state": "rejected"
     }
   ],
   "superseded": [
@@ -100,65 +104,93 @@
     "id": "2026-W35",
     "starts": "2026-08-27",
     "ends": "2026-09-02",
-    "theme": "Close the gaps the transport layer exposed, then start agent identity.",
+    "theme": "Stop building what MCP and A2A already ship. Defend the four pillars only.",
     "tasks": [
       {
         "id": "reconcile-status",
         "title": "Reconcile roadmaps into one machine-readable status file",
-        "track": "governance",
         "state": "done",
-        "why": "Two conflicting roadmaps meant a fresh session could get different marching orders from NEXT_ACTIONS.md and the handoff."
-      },
-      {
-        "id": "transport-clock-mapping",
-        "title": "Specify wall-clock to logical-clock mapping for non-local transports",
-        "track": "transport",
-        "state": "done",
-        "why": "The logical clock keeps the reference transport deterministic but leaves a real network transport unspecified. This blocks any second transport implementation."
+        "pillar": "deterministic machine representation",
+        "why": "Two conflicting roadmaps meant a fresh session could get different marching orders."
       },
       {
         "id": "harden-malformed-corpus",
         "title": "Extend adversarial corpus to bundles, manifests and hello payloads",
-        "track": "runtime-semantics",
         "state": "done",
-        "why": "Every untrusted entry point should have a rejection test. Only the module parser had one."
+        "pillar": "verifiable execution",
+        "why": "Every untrusted entry point should have a rejection test."
       },
       {
         "id": "security-model-doc",
         "title": "Document what each trust artifact does and does not prove",
-        "track": "identity",
         "state": "done",
-        "why": "A 24-bit unpadded RSA demo listed as a trust artifact in an agent-facing manifest is a misread waiting to happen."
+        "pillar": "verifiable execution",
+        "why": "A 24-bit unpadded RSA demo listed as a trust artifact is a misread waiting to happen."
       },
       {
         "id": "frozen-conformance-corpus",
         "title": "Freeze conformance artifacts so the format cannot be validated against itself",
-        "track": "runtime-semantics",
         "state": "done",
-        "why": "gen_samples.py rewrites samples/ from the code under test and quality_gate.sh runs it first. An encoding change would regenerate the samples to match, the suite would stay green, and every previously published .alp file would silently become unreadable. tests/fixtures/v0.2.0/ is never regenerated."
+        "pillar": "deterministic machine representation",
+        "why": "gen_samples.py rewrites samples from the code under test, so an encoding change would regenerate them to match and stay green."
+      },
+      {
+        "id": "transport-clock-mapping",
+        "title": "Specify wall-clock to logical-clock mapping",
+        "state": "superseded",
+        "pillar": null,
+        "why": "Shipped 2026-08-27, then rejected by the pillar test the same day. The deadline feature it serves is scheduled for removal, which removes the problem it solves."
       },
       {
         "id": "identity-spec-draft",
-        "title": "Draft agent identity spec: keypair, agent_id derivation, envelope attribution",
-        "track": "identity",
-        "state": "open",
-        "why": "Transport delivers payloads but cannot say who sent them. Identity is the next structural gap, not another feature.",
-        "acceptance": [
-          "spec/agent-identity-v0.2.md defines agent_id derivation and attribution fields",
-          "envelope schema gains an optional signed attribution block",
-          "backward compatible: unattributed envelopes still validate"
-        ]
+        "title": "Draft agent identity spec",
+        "state": "rejected",
+        "pillar": null,
+        "why": "Fully duplicated by A2A security schemes and MCP authorization. This was the next task the daily agent would have picked up on 28 August. Cancelled before it ran."
       },
       {
         "id": "trace-export",
-        "title": "Structured execution trace export from the transport receipt path",
-        "track": "observability",
+        "title": "Structured execution trace export",
+        "state": "rejected",
+        "pillar": null,
+        "why": "Superseded by deterministic replay proof, the only pillar-strengthening form of the same idea."
+      },
+      {
+        "id": "intent-compilation-spike",
+        "title": "Smallest end-to-end intent to module to verified execution path",
         "state": "open",
-        "why": "Receipts record outcomes but not the path taken. Agent debugging needs machine-readable spans, not stdout traces.",
+        "pillar": "intent compilation",
+        "why": "The only pillar with nothing built against it, and the only one no other protocol addresses at all. Nothing else on this list can make OpenALP irreplaceable.",
         "acceptance": [
-          "receipt optionally carries a trace reference",
-          "trace export is deterministic and diffable across runs",
-          "test asserts two identical sends produce byte-identical traces"
+          "spec/intent-v0.3.md defines what an intent is and what it is not",
+          "a declared intent lowers deterministically to a module; the same intent always yields the same module bytes",
+          "the compiled module can be checked against the declared intent without re-running the compiler",
+          "built to be discarded: no persistence, no registry, no transport"
+        ]
+      },
+      {
+        "id": "mcp-a2a-adapters",
+        "title": "Carry a verifiable OpenALP module inside an MCP tool result and an A2A artifact",
+        "state": "open",
+        "pillar": "protocol-independent interoperability",
+        "why": "Makes OpenALP complementary to the protocols it cannot beat. An A2A Artifact part and an MCP structured result both have a slot with no executable semantics; this fills it.",
+        "acceptance": [
+          "spec/interop-embedding-v0.3.md defines the embedding for both",
+          "round trip: module in, verify, execute, identical result",
+          "no OpenALP transport involved in either path"
+        ]
+      },
+      {
+        "id": "deprecate-transport-surface",
+        "title": "Remove ordering, status model, retry, deadlines and receipt store from alp/transport",
+        "state": "open",
+        "pillar": "verifiable execution",
+        "why": "783 lines of transport against a 441-line deterministic core. Retain only content-derived computation identity and payload integrity binding.",
+        "blocked_reason": "Awaiting human approval. This deletes working, tested code shipped the same day.",
+        "acceptance": [
+          "alp/transport reduced to identity and integrity binding",
+          "spec/transport-semantics-v0.2.md withdrawn with a note explaining why",
+          "no loss of any capability that strengthens a pillar"
         ]
       }
     ]
@@ -166,8 +198,9 @@
   "deferred": [
     {
       "id": "real-signatures",
-      "title": "Replace rsa-demo with a real signature scheme (Ed25519 or RSA-PSS)",
-      "why_deferred": "Conflicts with the stated zero-dependency stance (agent-manifest.json external_packages is empty). Needs an explicit decision on whether OpenALP takes a crypto dependency or ships a vendored implementation.",
+      "title": "Replace rsa-demo with a real signature scheme",
+      "pillar": "verifiable execution",
+      "why_deferred": "Still a human decision on dependency versus vendored implementation. Now higher priority than before: signing the module is one of only two things OpenALP has that MCP and A2A do not.",
       "decision_owner": "human"
     }
   ],
@@ -193,5 +226,156 @@
       "scope": "cold-environment checks the in-repo gate structurally cannot perform",
       "contract": "docs/AGENT_RUNBOOK.md"
     }
-  ]
+  ],
+  "mandate": {
+    "statement": "The goal is not to make OpenALP larger. The goal is to make OpenALP impossible to replace.",
+    "pillars": [
+      "deterministic machine representation",
+      "intent compilation",
+      "verifiable execution",
+      "protocol-independent interoperability"
+    ],
+    "admission_test": [
+      "Does MCP already solve this?",
+      "Does A2A already solve this?",
+      "Does ordinary tool calling already solve this?",
+      "Does this duplicate existing protocol behavior?",
+      "Does this strengthen OpenALP's unique thesis?"
+    ],
+    "rule": "A feature that does not strengthen exactly one named pillar is rejected. A feature duplicated by MCP, A2A or ordinary tool calling is removed unless OpenALP requires it internally.",
+    "position": "OpenALP is not an agent transport and must stop behaving like one. It is the payload that rides inside MCP tool results and A2A artifacts: the thing that turns an opaque result into a deterministic, verifiable, replayable computation. Competing with MCP or A2A on delivery is a fight OpenALP loses.",
+    "evidence_reviewed": "2026-08-27, against MCP spec 2026-07-28 and the current A2A specification."
+  },
+  "audit": {
+    "as_of": "2026-08-27",
+    "finding": "The transport layer is 783 lines. The deterministic core it exists to serve is 441. The duplicated surface is now larger than the unique thesis.",
+    "verdicts": [
+      {
+        "feature": "Deterministic module format (.alp), reference VM, determinism report",
+        "pillar": "deterministic machine representation",
+        "mcp": "no",
+        "a2a": "no",
+        "tool_calling": "no",
+        "verdict": "keep",
+        "reason": "Nothing in MCP or A2A carries a portable, byte-exact executable representation. MCP tools are opaque endpoints; A2A artifacts are generic content containers with no executable semantics. This is the only thing OpenALP has that cannot be obtained elsewhere."
+      },
+      {
+        "feature": "Checksum and signature manifests over the module",
+        "pillar": "verifiable execution",
+        "mcp": "no",
+        "a2a": "no",
+        "tool_calling": "no",
+        "verdict": "keep",
+        "reason": "MCP 2026-07-28 contains no cryptographic signature, integrity verification or signed execution artifact concept. A2A authenticates the channel, not the computation. Signing a portable executable artifact is unoccupied ground."
+      },
+      {
+        "feature": "Frozen conformance corpus",
+        "pillar": "deterministic machine representation",
+        "mcp": "no",
+        "a2a": "no",
+        "tool_calling": "no",
+        "verdict": "keep",
+        "reason": "Directly defends the pillar. Without it the format is validated only against itself."
+      },
+      {
+        "feature": "Content-derived envelope identity",
+        "pillar": "verifiable execution",
+        "mcp": "no",
+        "a2a": "partial",
+        "tool_calling": "no",
+        "verdict": "keep, reframed",
+        "reason": "A2A task IDs are server-generated and opaque; deduplication is MAY, via messageId. A computation identity derived from payload content is stronger, and is a property of determinism rather than of delivery. Rename from delivery envelope to computation identity."
+      },
+      {
+        "feature": "Per-stream ordering, sequence contiguity, pending flush",
+        "pillar": null,
+        "mcp": "yes",
+        "a2a": "yes",
+        "tool_calling": "yes",
+        "verdict": "remove",
+        "reason": "A2A mandates that implementations deliver events in generation order regardless of binding. Every queue and transport solves this. Strengthens no pillar."
+      },
+      {
+        "feature": "Eight-state execution status model",
+        "pillar": null,
+        "mcp": "yes",
+        "a2a": "yes",
+        "tool_calling": "partial",
+        "verdict": "remove",
+        "reason": "A2A TaskState already defines working, input-required, auth-required, completed, failed, canceled and rejected. MCP has a tasks extension with polling. This is a reimplementation with different spelling."
+      },
+      {
+        "feature": "Retry, exponential backoff, max_attempts",
+        "pillar": null,
+        "mcp": "partial",
+        "a2a": "no",
+        "tool_calling": "yes",
+        "verdict": "remove",
+        "reason": "A2A deliberately leaves retry to implementations, so this is not duplicated by spec. It is still solved by every transport in existence and strengthens no pillar. Rejected on pillar grounds, not duplication grounds."
+      },
+      {
+        "feature": "Deadlines, logical clock, clock policy, quantization",
+        "pillar": null,
+        "mcp": "partial",
+        "a2a": "no",
+        "tool_calling": "yes",
+        "verdict": "remove",
+        "reason": "Same reasoning as retry. The determinism argument that motivated the logical clock exists only because the deadline feature exists; removing the feature removes the problem it solves."
+      },
+      {
+        "feature": "Idempotency receipt store, duplicate status",
+        "pillar": null,
+        "mcp": "partial",
+        "a2a": "partial",
+        "tool_calling": "yes",
+        "verdict": "remove as feature, retain as property",
+        "reason": "Content-derived identity makes deduplication free for anyone who wants it. Shipping a receipt store means owning operating state OpenALP has no business owning."
+      },
+      {
+        "feature": "Agent identity, sender attribution, key rotation, revocation",
+        "pillar": null,
+        "mcp": "yes",
+        "a2a": "yes",
+        "tool_calling": "yes",
+        "verdict": "remove from roadmap",
+        "reason": "A2A declares API key, HTTP basic and bearer, OAuth 2.0, OpenID Connect and mutual TLS in agent cards. MCP 2026-07-28 hardened authorization with RFC 9207 issuer validation and Client ID Metadata Documents. Building sender identity is rebuilding solved infrastructure badly. Signing the module stays; authenticating the sender goes."
+      },
+      {
+        "feature": "Package registry foundations",
+        "pillar": null,
+        "mcp": "yes",
+        "a2a": "no",
+        "tool_calling": "partial",
+        "verdict": "remove from roadmap",
+        "reason": "An MCP registry exists. More fundamentally, content addressing is what a registry is for: if modules are addressed by hash, the registry is a cache someone else can run."
+      },
+      {
+        "feature": "Economic hooks, metering, settlement",
+        "pillar": null,
+        "mcp": "no",
+        "a2a": "no",
+        "tool_calling": "no",
+        "verdict": "reject",
+        "reason": "Strengthens no pillar. Not duplicated, simply out of scope. Removed from the roadmap entirely rather than deferred, because deferring it implies it returns."
+      },
+      {
+        "feature": "Structured trace export",
+        "pillar": "verifiable execution",
+        "mcp": "partial",
+        "a2a": "partial",
+        "tool_calling": "yes",
+        "verdict": "keep only as replay proof",
+        "reason": "Observability is solved by OpenTelemetry and A2A task history. A deterministic trace a third party can independently replay to the same hash is not observability, it is proof. Only the proof form survives."
+      },
+      {
+        "feature": "MCP and A2A payload adapters",
+        "pillar": "protocol-independent interoperability",
+        "mcp": "no",
+        "a2a": "no",
+        "tool_calling": "no",
+        "verdict": "add",
+        "reason": "An A2A Artifact is a generic container with no executable semantics; an MCP tool result is opaque content. Carrying a verifiable OpenALP module inside either makes OpenALP complementary rather than competing, which is the only position it survives in."
+      }
+    ]
+  }
 }

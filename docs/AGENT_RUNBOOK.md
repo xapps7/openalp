@@ -47,10 +47,39 @@ find alp tests samples -name '*.py' -exec touch {} +
 
 This is not theoretical. It was observed on 2026-08-27: a same-length edit produced a source and a cached `.pyc` sharing mtime `1787817261`, and the suite reported failures from code that no longer existed on disk.
 
+## The admission test — apply before writing any code
+
+OpenALP's purpose is not to grow. It is to become impossible to replace. Most of what an agent protocol could plausibly build is already shipped by MCP, by A2A, or by ordinary tool calling, and every line of that kind makes OpenALP more replaceable, not less — it enlarges the surface someone else already maintains better.
+
+Before implementing anything, answer all five in the worklog:
+
+1. Does MCP already solve this?
+2. Does A2A already solve this?
+3. Does ordinary tool calling already solve this?
+4. Does this duplicate existing protocol behaviour?
+5. Does this strengthen OpenALP's unique thesis?
+
+Then name the single pillar it strengthens:
+
+- deterministic machine representation
+- intent compilation
+- verifiable execution
+- protocol-independent interoperability
+
+**If it strengthens none of the four, reject it and say so.** Do not implement it because it is in the queue — the queue can be wrong, and rejecting a queued task with a stated reason is a valid and valuable run. **If it is duplicated by MCP, A2A or ordinary tool calling, recommend removal** unless OpenALP genuinely needs it internally, in which case say precisely why the internal need cannot be met by the existing protocol.
+
+Two rules that follow from this and are easy to get backwards:
+
+- **OpenALP is not a transport.** It is the payload that rides inside MCP tool results and A2A artifacts. Anything that looks like delivery, routing, session management, retry, ordering, deadlines or sender authentication belongs to the protocol carrying OpenALP, not to OpenALP. Competing with MCP or A2A on delivery is a fight OpenALP loses.
+- **Removing code is progress.** A run whose entire output is a well-argued deletion is a good run. Record it in the worklog the same way as a feature.
+
+The current verdicts are recorded in `docs/status.json` under `audit`. Read them before proposing anything — several plausible features have already been rejected with reasons, and re-proposing one without new evidence wastes a run.
+
 ## Work selection
 
 Pick **exactly one** task from `week.tasks[]` in `docs/status.json` with `state: "open"`, in listed order.
 
+0. Run the admission test above on it. If it fails, mark the task `rejected` with the reason, log it, commit that, and stop. Do not implement a task that fails the test.
 1. Set it to `"in_progress"` and commit that alone, so a crashed run leaves a trace.
 2. Implement against its `acceptance` criteria. If it is too large for one run, split it in `status.json` into named sub-tasks and implement only the first. Do not half-finish a task and call it done.
 3. Write tests. A change with no test does not ship. Assert behaviour, not implementation.

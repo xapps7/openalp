@@ -101,6 +101,19 @@
   - gate scripts now export `PYTHONPYCACHEPREFIX`; hazard documented in the runbook
   - suite now `91` tests passing
 
+### Block 6
+
+- Duration: `1.5h`
+- Focus: Mandate change — prevent OpenALP from becoming unnecessary
+- Output:
+  - verified overlap against MCP spec `2026-07-28` and the current A2A specification rather than from memory
+  - added four-pillar admission test to [status.json](/Users/cedcoss/Documents/AgentLang/alp_mvp/docs/status.json) and [AGENT_RUNBOOK.md](/Users/cedcoss/Documents/AgentLang/alp_mvp/docs/AGENT_RUNBOOK.md); both agents now reject before they build
+  - audited 14 features: 4 keep, 6 remove, 3 reject, 1 add
+  - cancelled `identity-spec-draft` — fully duplicated by A2A security schemes and MCP authorization, and it was the task the daily agent would have started on 28 August
+  - cancelled `trace-export`, `package registry`, `economic hooks`
+  - queued `intent-compilation-spike` and `mcp-a2a-adapters` as the only pillar-strengthening work
+  - queued `deprecate-transport-surface` pending approval: 783 lines of transport against a 441-line deterministic core
+
 ### Total
 
-- `7.5h`
+- `9.0h`
