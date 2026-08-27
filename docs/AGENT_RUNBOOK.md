@@ -47,6 +47,20 @@ find alp tests samples -name '*.py' -exec touch {} +
 
 This is not theoretical. It was observed on 2026-08-27: a same-length edit produced a source and a cached `.pyc` sharing mtime `1787817261`, and the suite reported failures from code that no longer existed on disk.
 
+## Phase discipline — read before work selection
+
+`docs/status.json` names an `active_phase`. Work only on tasks belonging to it, in `order`. A task from a later phase is not eligible however attractive it looks, and picking one up is a failed run even if the code is good.
+
+The current phase is **specification, not features**. Its purpose is to make OpenALP deterministic in the sense a second implementation could be checked against — not deterministic in the sense of "the same Python process gives the same answer twice", which is what `alp determinism report` currently proves and is a much weaker claim.
+
+`docs/status.json` records eight `determinism_findings`, each reproduced by running the reference VM. Read them before starting. Three are fatal to the invariant as stated: arithmetic uses arbitrary-precision integers, division rounds the wrong way for negatives, and the step budget silently changes the result of an identical artifact. Two of the findings carry `decision_owner: human` and must not be resolved unilaterally — if a task is blocked on one, say so and stop.
+
+While this phase is active:
+
+- Adding an opcode, a feature, or a capability is out of scope. Specifying the behaviour of what already exists is the work.
+- Changing observable behaviour is in scope only where a finding says the current behaviour is unspecifiable, and only with the finding cited.
+- Every normative statement written must have a test that fails when the statement is violated. A specification with no executable consequence is documentation.
+
 ## The admission test — apply before writing any code
 
 OpenALP's purpose is not to grow. It is to become impossible to replace. Most of what an agent protocol could plausibly build is already shipped by MCP, by A2A, or by ordinary tool calling, and every line of that kind makes OpenALP more replaceable, not less — it enlarges the surface someone else already maintains better.

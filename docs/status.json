@@ -104,7 +104,7 @@
     "id": "2026-W35",
     "starts": "2026-08-27",
     "ends": "2026-09-02",
-    "theme": "Stop building what MCP and A2A already ship. Defend the four pillars only.",
+    "theme": "Phase 1: make OpenALP deterministic. No features.",
     "tasks": [
       {
         "id": "reconcile-status",
@@ -156,28 +156,99 @@
         "why": "Superseded by deterministic replay proof, the only pillar-strengthening form of the same idea."
       },
       {
-        "id": "intent-compilation-spike",
-        "title": "Smallest end-to-end intent to module to verified execution path",
+        "id": "p1-numeric-model",
+        "phase": "phase-1-specification",
+        "order": 1,
+        "title": "Fix the numeric model: width, overflow, division, operand widening",
         "state": "open",
-        "pillar": "intent compilation",
-        "why": "The only pillar with nothing built against it, and the only one no other protocol addresses at all. Nothing else on this list can make OpenALP irreplaceable.",
+        "pillar": "deterministic machine representation",
+        "why": "Resolves F1, F2 and F3. Nothing downstream can be hashed until arithmetic is defined, because every golden vector depends on it. This is the blocking task of the phase.",
+        "blocked_reason": "Needs a human decision on integer width (i64 recommended) before implementation.",
         "acceptance": [
-          "spec/intent-v0.3.md defines what an intent is and what it is not",
-          "a declared intent lowers deterministically to a module; the same intent always yields the same module bytes",
-          "the compiled module can be checked against the declared intent without re-running the compiler",
-          "built to be discarded: no persistence, no registry, no transport"
+          "one width model stated normatively and implemented in alp/vm.py",
+          "wrapping semantics for add, sub, mul; truncate-toward-zero division",
+          "canonical traps for divide-by-zero and INT_MIN / -1",
+          "PRINT_CHAR total over the whole integer range",
+          "differential tests against a reference i64 implementation of each operation"
         ]
       },
       {
-        "id": "mcp-a2a-adapters",
-        "title": "Carry a verifiable OpenALP module inside an MCP tool result and an A2A artifact",
+        "id": "p1-execution-semantics",
+        "phase": "phase-1-specification",
+        "order": 2,
+        "title": "DETERMINISTIC_SEMANTICS.md",
         "state": "open",
-        "pillar": "protocol-independent interoperability",
-        "why": "Makes OpenALP complementary to the protocols it cannot beat. An A2A Artifact part and an MCP structured result both have a slot with no executable semantics; this fills it.",
+        "pillar": "deterministic machine representation",
+        "why": "The formal execution semantics: execution model, ordering rules, memory model, numeric behavior, error propagation, external interaction rules, concurrency semantics. Resolves F4, F5, F6 and F8 in normative language.",
         "acceptance": [
-          "spec/interop-embedding-v0.3.md defines the embedding for both",
-          "round trip: module in, verify, execute, identical result",
-          "no OpenALP transport involved in either path"
+          "all seven areas specified normatively, with MUST/MUST NOT wording",
+          "step budget defined as part of the execution profile",
+          "closed set of canonical trap codes",
+          "external interaction: states explicitly that the deterministic core is closed, and where the boundary lies",
+          "concurrency: states that execution is strictly sequential and unobservable concurrency is forbidden",
+          "every statement traceable to a conformance test"
+        ]
+      },
+      {
+        "id": "p1-canonical-encoding",
+        "phase": "phase-1-specification",
+        "order": 3,
+        "title": "CANONICAL_ENCODING.md",
+        "state": "open",
+        "pillar": "deterministic machine representation",
+        "why": "One canonical byte representation and one set of serialization rules. Resolves F7. Without this, two implementations can agree on the computation and still disagree on the hash.",
+        "acceptance": [
+          "exactly one canonical byte encoding for a module; non-canonical encodings are rejected, not normalized",
+          "canonical encoding for the execution profile and for the result, including traps",
+          "output specified as bytes, never text",
+          "canonicalization is total and injective: distinct results never share an encoding"
+        ]
+      },
+      {
+        "id": "p1-result-hash",
+        "phase": "phase-1-specification",
+        "order": 4,
+        "title": "Canonical result hash and the determinism definition",
+        "state": "open",
+        "pillar": "verifiable execution",
+        "why": "Formally define deterministic execution and make the invariant computable: same artifact + same input + same profile = same canonical result hash. A definition nobody can compute is a slogan.",
+        "acceptance": [
+          "the invariant stated formally, including what is quantified over",
+          "hash preimage fully specified: artifact bytes, profile, input, result",
+          "implemented as a library function and an `alp hash` CLI command",
+          "a trap produces a hash exactly as a successful halt does"
+        ]
+      },
+      {
+        "id": "p1-golden-vectors",
+        "phase": "phase-1-specification",
+        "order": 5,
+        "title": "Golden vectors",
+        "state": "open",
+        "pillar": "deterministic machine representation",
+        "why": "The artifact a second implementation is checked against. Must cover the edges that actually diverge between languages, not the happy path.",
+        "acceptance": [
+          "vectors for arithmetic edges: overflow wraparound, INT_MIN, negative division and remainder",
+          "vectors for every canonical trap",
+          "vectors for step-budget exhaustion at the exact boundary",
+          "vectors for byte output across the full 0-255 range",
+          "each vector carries artifact bytes, profile, expected result and expected hash",
+          "stored outside samples/ so gen_samples.py can never regenerate them"
+        ]
+      },
+      {
+        "id": "p1-conformance-tests",
+        "phase": "phase-1-specification",
+        "order": 6,
+        "title": "Exhaustive conformance tests proving the guarantees",
+        "state": "open",
+        "pillar": "verifiable execution",
+        "why": "Each normative statement in the two specs must have a test that fails if the statement is violated. A specification with no executable consequence is documentation.",
+        "acceptance": [
+          "every MUST in both documents maps to at least one named test",
+          "property test: re-running any golden vector reproduces its hash exactly",
+          "negative test: a non-canonical encoding is rejected rather than normalized",
+          "a coverage report listing any normative statement with no test"
         ]
       },
       {
@@ -191,7 +262,35 @@
           "alp/transport reduced to identity and integrity binding",
           "spec/transport-semantics-v0.2.md withdrawn with a note explaining why",
           "no loss of any capability that strengthens a pillar"
-        ]
+        ],
+        "phase": "phase-0-cleanup"
+      },
+      {
+        "id": "intent-compilation-spike",
+        "title": "Smallest end-to-end intent to module to verified execution path",
+        "state": "queued",
+        "pillar": "intent compilation",
+        "why": "The only pillar with nothing built against it, and the only one no other protocol addresses at all. Nothing else on this list can make OpenALP irreplaceable. Deferred to phase 2: the specification phase must close first, because an intent compiler that targets undefined semantics compiles to nothing trustworthy.",
+        "acceptance": [
+          "spec/intent-v0.3.md defines what an intent is and what it is not",
+          "a declared intent lowers deterministically to a module; the same intent always yields the same module bytes",
+          "the compiled module can be checked against the declared intent without re-running the compiler",
+          "built to be discarded: no persistence, no registry, no transport"
+        ],
+        "phase": "phase-2"
+      },
+      {
+        "id": "mcp-a2a-adapters",
+        "title": "Carry a verifiable OpenALP module inside an MCP tool result and an A2A artifact",
+        "state": "queued",
+        "pillar": "protocol-independent interoperability",
+        "why": "Makes OpenALP complementary to the protocols it cannot beat. An A2A Artifact part and an MCP structured result both have a slot with no executable semantics; this fills it. Deferred to phase 2: the specification phase must close first, because an intent compiler that targets undefined semantics compiles to nothing trustworthy.",
+        "acceptance": [
+          "spec/interop-embedding-v0.3.md defines the embedding for both",
+          "round trip: module in, verify, execute, identical result",
+          "no OpenALP transport involved in either path"
+        ],
+        "phase": "phase-2"
       }
     ]
   },
@@ -375,6 +474,80 @@
         "tool_calling": "no",
         "verdict": "add",
         "reason": "An A2A Artifact is a generic container with no executable semantics; an MCP tool result is opaque content. Carrying a verifiable OpenALP module inside either makes OpenALP complementary rather than competing, which is the only position it survives in."
+      }
+    ]
+  },
+  "active_phase": "phase-1-specification",
+  "phase_discipline": "Work only on tasks belonging to active_phase. A task from a later phase is not eligible however attractive it looks. Phases close when every task in them is done and the gate is green; the human decides when to open the next one.",
+  "determinism_findings": {
+    "as_of": "2026-08-27",
+    "claim_under_test": "same artifact + same canonical input + same execution profile = same canonical result hash",
+    "verdict": "The invariant does not currently hold across implementations. `alp determinism report` proves repeatability within one Python process; it says nothing about agreement between two conforming implementations. Every finding below was reproduced by running the reference VM.",
+    "findings": [
+      {
+        "id": "F1",
+        "area": "numeric behavior",
+        "severity": "fatal",
+        "observed": "Arithmetic uses Python arbitrary-precision integers. 127 squared four times yields a 112-bit value (4579937329576774398276408998492161).",
+        "consequence": "Any implementation in C, Rust, Go or WASM overflows at 64 bits and produces a different result for the same artifact. There is no defined width, no defined overflow behaviour.",
+        "recommended_resolution": "Adopt i64 two's complement with wrapping add/sub/mul, following the WASM numeric model \u2014 the most heavily studied deterministic execution spec available.",
+        "decision_owner": "human"
+      },
+      {
+        "id": "F2",
+        "area": "numeric behavior",
+        "severity": "fatal",
+        "observed": "DIV uses Python floor division. -7 / 2 evaluates to -4.",
+        "consequence": "C, Rust, Go and WASM all truncate toward zero and produce -3. Silent divergence on every negative division.",
+        "recommended_resolution": "Truncate toward zero. Trap on divide-by-zero and on INT64_MIN / -1, both as canonical traps."
+      },
+      {
+        "id": "F3",
+        "area": "memory and width model",
+        "severity": "high",
+        "observed": "PUSH_CONST sign-extends an 8-bit operand, so operand 200 becomes -56. PRINT_CHAR requires 0..255 and rejects negatives.",
+        "consequence": "Byte values 128-255 are unreachable from a constant. The two width models contradict each other inside one instruction set.",
+        "recommended_resolution": "State one width model: operands sign-extend i8 to i64, and PRINT_CHAR emits value & 0xFF as a total function with no trap."
+      },
+      {
+        "id": "F4",
+        "area": "execution model",
+        "severity": "high",
+        "observed": "The same module halts normally under a 1000-step budget and traps under a 5-step budget. max_steps is a Python keyword argument, present in neither the module nor any declared profile.",
+        "consequence": "The step budget silently changes the result of an identical artifact, so it must be part of the execution profile the invariant names, or the invariant is unprovable.",
+        "recommended_resolution": "Make the step budget a required, canonically encoded field of the execution profile, and include it in the hash preimage."
+      },
+      {
+        "id": "F5",
+        "area": "error propagation",
+        "severity": "high",
+        "observed": "Failures raise VMError with free-text messages such as 'stack underflow in ADD: need 2, have 0'.",
+        "consequence": "A failing execution has no canonical result, so it cannot be hashed or compared. Two implementations cannot agree that they failed the same way.",
+        "recommended_resolution": "Define a closed set of canonical trap codes. A trap is a normal, hashable outcome, not an absence of one."
+      },
+      {
+        "id": "F6",
+        "area": "external interaction",
+        "severity": "medium",
+        "observed": "The reference VM has no input mechanism at all; run_module takes a module and a step budget.",
+        "consequence": "The target invariant names 'canonical input', which does not exist. Either an input model is defined or the spec must state that modules are closed computations and drop the term.",
+        "decision_owner": "human"
+      },
+      {
+        "id": "F7",
+        "area": "output representation",
+        "severity": "medium",
+        "observed": "Output accumulates Python str characters via chr(), producing code points rather than bytes.",
+        "consequence": "Canonical output is ambiguous between a byte string and a text string with an encoding. Hashes computed over it would differ by implementation language.",
+        "recommended_resolution": "Output is a byte string. Canonical encoding is the raw bytes; any text interpretation is out of scope."
+      },
+      {
+        "id": "F8",
+        "area": "concurrency",
+        "severity": "low",
+        "observed": "Execution is single-threaded with no concurrency primitives.",
+        "consequence": "Not a defect, but the specification must state it normatively so a future implementation cannot introduce parallelism and claim conformance.",
+        "recommended_resolution": "State that the execution model is strictly sequential and that no conforming implementation may observe or introduce concurrency within a single execution."
       }
     ]
   }

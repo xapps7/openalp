@@ -114,6 +114,19 @@
   - queued `intent-compilation-spike` and `mcp-a2a-adapters` as the only pillar-strengthening work
   - queued `deprecate-transport-surface` pending approval: 783 lines of transport against a 441-line deterministic core
 
+### Block 7
+
+- Duration: `1.0h`
+- Focus: Phase 1 — specification phase opened
+- Output:
+  - tested the target invariant against the reference VM and found it does not hold across implementations
+  - eight findings recorded in `status.json`, each reproduced by running code; three fatal
+  - `F1` arbitrary-precision arithmetic: 127^16 yields a 112-bit value, no defined width
+  - `F2` floor division: -7/2 = -4 where C, Rust, Go and WASM give -3
+  - `F4` step budget changes the outcome of an identical artifact and lives in neither module nor profile
+  - queued six ordered phase-1 tasks; phase discipline added to the runbook
+  - deferred intent compilation and interop adapters to phase 2
+
 ### Total
 
-- `9.0h`
+- `10.0h`
