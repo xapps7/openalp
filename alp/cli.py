@@ -22,6 +22,7 @@ from .integrity import (
     write_signature_manifest,
 )
 from .opcodes import opname
+from .protocol import ProtocolError, RuntimeProfile, validate_runtime_compatibility
 from .rawbuild import RawBuildError, build_alpb_file
 from .vm import VMError, run_module
 
@@ -86,6 +87,28 @@ def cmd_handshake_validate(args: argparse.Namespace) -> int:
         return 1
     print(json.dumps(result))
     return 0 if result.get("compatible") else 1
+
+
+def cmd_runtime_validate(args: argparse.Namespace) -> int:
+    module_path = pathlib.Path(args.path)
+    hello_path = pathlib.Path(args.hello)
+    try:
+        module = parse_module(_read(module_path))
+        hello = parse_hello(json.loads(hello_path.read_text()))
+        result = validate_runtime_compatibility(
+            RuntimeProfile(
+                protocol=hello.protocol,
+                protocol_version=hello.version,
+                module_version=module.version,
+                features=hello.features,
+                targets=hello.targets,
+            )
+        )
+    except (OSError, ALPFormatError, json.JSONDecodeError, HandshakeError, ProtocolError) as exc:
+        print(f"INVALID: {exc}")
+        return 1
+    print(json.dumps(result))
+    return 0
 
 
 def cmd_decompile(args: argparse.Namespace) -> int:
@@ -289,6 +312,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_hs_validate = p_handshake_sub.add_parser("validate", help="validate hello JSON and check compatibility")
     p_hs_validate.add_argument("path")
     p_hs_validate.set_defaults(func=cmd_handshake_validate)
+
+    p_runtime = sub.add_parser("runtime", help="runtime compatibility tools")
+    p_runtime_sub = p_runtime.add_subparsers(dest="runtime_command", required=True)
+    p_runtime_validate = p_runtime_sub.add_parser("validate", help="validate module and hello compatibility")
+    p_runtime_validate.add_argument("path")
+    p_runtime_validate.add_argument("--hello", required=True)
+    p_runtime_validate.set_defaults(func=cmd_runtime_validate)
 
     p_decompile = sub.add_parser("decompile", help="decompile an ALP module to Python-like code")
     p_decompile.add_argument("path")

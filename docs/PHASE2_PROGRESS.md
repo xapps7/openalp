@@ -9,6 +9,8 @@
 3. Added bundle test coverage (`tests/test_bundle.py`).
 4. Added sample bundle files (`samples/add.alpp.json`, `samples/add.alppb`).
 5. Added compact binary bundle format support (`.alppb`) with auto-detect runtime path.
+6. Added governance/runtime validation layer with protocol version lifecycle and compatibility checks.
+7. Added machine-readable spec registry (`spec/index.json`).
 
 ## Why this matters
 

@@ -1,6 +1,6 @@
 {
   "protocol": "ALP",
-  "version": "0.1",
+  "version": "0.2",
   "features": ["vm-stack-v1", "deterministic"],
   "targets": ["ref-vm"]
 }

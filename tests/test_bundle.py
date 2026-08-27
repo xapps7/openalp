@@ -33,7 +33,7 @@ class BundleTests(unittest.TestCase):
             k = root / "k.key"
             b = root / "bundle.alpp.json"
             m.write_bytes(encode_module(module))
-            h.write_text(json.dumps({"protocol": "ALP", "version": "0.1", "features": ["vm-stack-v1"], "targets": ["ref-vm"]}))
+            h.write_text(json.dumps({"protocol": "ALP", "version": "0.2", "features": ["vm-stack-v1"], "targets": ["ref-vm"]}))
             k.write_text("secret-key")
 
             self.assertEqual(main(["checksum", "create", str(m)]), 0)
@@ -88,7 +88,7 @@ class BundleTests(unittest.TestCase):
             k = root / "k.key"
             b = root / "bundle.alppb"
             m.write_bytes(encode_module(module))
-            h.write_text(json.dumps({"protocol": "ALP", "version": "0.1", "features": ["vm-stack-v1"], "targets": ["ref-vm"]}))
+            h.write_text(json.dumps({"protocol": "ALP", "version": "0.2", "features": ["vm-stack-v1"], "targets": ["ref-vm"]}))
             k.write_text("secret-key")
 
             self.assertEqual(main(["checksum", "create", str(m)]), 0)

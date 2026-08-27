@@ -1,0 +1,24 @@
+{
+  "protocol": "ALP",
+  "protocol_version": "0.2",
+  "documents": [
+    {
+      "id": "alp-core-v0.1",
+      "path": "spec/alp-v0.1.md",
+      "kind": "core",
+      "status": "active"
+    },
+    {
+      "id": "alp-governance-v0.2",
+      "path": "spec/alp-governance-v0.2.md",
+      "kind": "governance",
+      "status": "active"
+    },
+    {
+      "id": "runtime-semantics-v0.2",
+      "path": "spec/runtime-semantics-v0.2.md",
+      "kind": "runtime-semantics",
+      "status": "active"
+    }
+  ]
+}

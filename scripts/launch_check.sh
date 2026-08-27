@@ -22,5 +22,6 @@ test -f "$ROOT/CHANGELOG.md"
 "$ROOT/scripts/setup.sh" >/tmp/openalp-setup.out
 PYTHONPATH="$ROOT" python3 -m alp.cli bundle run --bundle "$ROOT/samples/add.alpp.json" --key "$ROOT/samples/dev_hmac.key" >/tmp/openalp-bundle-run.out
 PYTHONPATH="$ROOT" python3 -m alp.cli bundle run --bundle "$ROOT/samples/add.alppb" --key "$ROOT/samples/dev_hmac.key" >/tmp/openalp-bundle-run-bin.out
+PYTHONPATH="$ROOT" python3 -m alp.cli runtime validate "$ROOT/samples/add.alp" --hello "$ROOT/samples/hello_ref_vm.json" >/tmp/openalp-runtime-validate.out
 
 echo "launch_check=ok"

@@ -74,6 +74,8 @@ Out-of-scope for binary runtime, but reserved as JSON capability exchange:
 
 - Unknown flags/version rejected in MVP.
 - Extension sections reserved for v0.2+.
+- Governance rules for protocol lifecycle are defined in `spec/alp-governance-v0.2.md`.
+- Deterministic runtime rules are defined in `spec/runtime-semantics-v0.2.md`.
 
 ## Raw Authoring Format (`.alpb`, MVP tooling)
 

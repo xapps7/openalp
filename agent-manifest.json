@@ -2,6 +2,7 @@
   "name": "OpenALP",
   "protocol": "Open Agentic Language Protocol",
   "version": "0.1.1",
+  "protocol_version": "0.2",
   "artifacts": [".alp", ".alpb", ".alpp.json", ".alppb", ".sha256.json", ".sig.json", ".rsa.sig.json", "ALP-Hello"],
   "dependencies": {
     "python": ">=3.10",

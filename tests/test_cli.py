@@ -51,7 +51,7 @@ class CLITests(unittest.TestCase):
                 json.dumps(
                     {
                         "protocol": "ALP",
-                        "version": "0.1",
+                        "version": "0.2",
                         "features": ["vm-stack-v1"],
                         "targets": ["ref-vm"],
                     }
@@ -62,6 +62,39 @@ class CLITests(unittest.TestCase):
                 rc = main(["handshake", "validate", str(p)])
             self.assertEqual(rc, 0)
             self.assertTrue(json.loads(buf.getvalue())["compatible"])
+
+    def test_runtime_validate(self) -> None:
+        module = Module(
+            version=VERSION,
+            flags=0,
+            entry=0,
+            instructions=(
+                Instruction(0x01, 4, 0, 0),
+                Instruction(0x08, 0, 0, 0),
+            ),
+        )
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "m.alp"
+            h = Path(td) / "hello.json"
+            p.write_bytes(encode_module(module))
+            h.write_text(
+                json.dumps(
+                    {
+                        "protocol": "ALP",
+                        "version": "0.2",
+                        "features": ["vm-stack-v1", "deterministic"],
+                        "targets": ["ref-vm"],
+                    }
+                )
+            )
+
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                rc = main(["runtime", "validate", str(p), "--hello", str(h)])
+            self.assertEqual(rc, 0)
+            payload = json.loads(buf.getvalue())
+            self.assertTrue(payload["compatible"])
+            self.assertEqual(payload["protocol_version"], "0.2")
 
     def test_decompile(self) -> None:
         module = Module(

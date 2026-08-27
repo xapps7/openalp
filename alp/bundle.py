@@ -9,6 +9,7 @@ from pathlib import Path
 from .format import ALPFormatError, parse_module
 from .handshake import HandshakeError, compatibility, parse_hello
 from .integrity import verify_manifest, verify_signature_manifest
+from .protocol import validate_protocol_version, ProtocolError
 from .vm import run_module
 
 _BUNDLE_BIN_MAGIC = b"ALPPB1\x00"
@@ -69,6 +70,8 @@ def create_bundle(
 ) -> None:
     payload = {
         "bundle_version": "1",
+        "protocol": "ALP",
+        "protocol_version": "0.2",
         "module_name": module_path.name,
         "module_b64": _encode_bytes(module_path.read_bytes()),
         "hello": json.loads(hello_path.read_text()),
@@ -81,6 +84,12 @@ def create_bundle(
 
 def run_bundle(bundle_path: Path, signature_key_path: Path, max_steps: int = 100_000) -> BundleResult:
     bundle = _read_bundle_payload(bundle_path)
+    protocol = bundle.get("protocol", "ALP")
+    protocol_version = bundle.get("protocol_version", bundle.get("hello", {}).get("version", "0.1"))
+    try:
+        validate_protocol_version(protocol, protocol_version)
+    except ProtocolError as exc:
+        raise BundleError(str(exc)) from exc
 
     try:
         module_bytes = _decode_bytes(bundle["module_b64"])

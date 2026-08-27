@@ -2,6 +2,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .protocol import (
+    PROTOCOL_NAME,
+    CURRENT_PROTOCOL_VERSION,
+    ProtocolError,
+    RuntimeProfile,
+    validate_runtime_compatibility,
+)
+
 
 class HandshakeError(ValueError):
     pass
@@ -13,12 +21,6 @@ class Hello:
     version: str
     features: tuple[str, ...]
     targets: tuple[str, ...]
-
-
-SUPPORTED_PROTOCOL = "ALP"
-SUPPORTED_VERSION = "0.1"
-SUPPORTED_FEATURES = {"vm-stack-v1", "deterministic"}
-SUPPORTED_TARGETS = {"ref-vm"}
 
 
 def parse_hello(payload: object) -> Hello:
@@ -48,21 +50,28 @@ def parse_hello(payload: object) -> Hello:
 
 
 def compatibility(hello: Hello) -> dict[str, object]:
-    if hello.protocol != SUPPORTED_PROTOCOL:
-        return {"compatible": False, "reason": f"unsupported protocol {hello.protocol}"}
-    if hello.version != SUPPORTED_VERSION:
-        return {"compatible": False, "reason": f"unsupported version {hello.version}"}
-
-    shared_features = sorted(set(hello.features) & SUPPORTED_FEATURES)
-    shared_targets = sorted(set(hello.targets) & SUPPORTED_TARGETS)
-
-    if not shared_targets:
-        return {"compatible": False, "reason": "no shared targets"}
+    try:
+        result = validate_runtime_compatibility(
+            RuntimeProfile(
+                protocol=hello.protocol,
+                protocol_version=hello.version,
+                module_version=1,
+                features=hello.features,
+                targets=hello.targets,
+            )
+        )
+    except ProtocolError as exc:
+        return {"compatible": False, "reason": str(exc)}
 
     return {
         "compatible": True,
-        "protocol": SUPPORTED_PROTOCOL,
-        "version": SUPPORTED_VERSION,
-        "shared_features": shared_features,
-        "shared_targets": shared_targets,
+        "protocol": PROTOCOL_NAME,
+        "version": result["protocol_version"],
+        "current_version": CURRENT_PROTOCOL_VERSION,
+        "shared_features": result["shared_features"],
+        "shared_targets": result["shared_targets"],
+        "deprecated": result["deprecated"],
+        "phase": result["phase"],
+        "replacement": result["replacement"],
+        "sunset_after": result["sunset_after"],
     }
