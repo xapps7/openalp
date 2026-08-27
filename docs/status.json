@@ -16,25 +16,83 @@
     "./scripts/launch_check.sh"
   ],
   "tracks": [
-    {"id": "governance", "name": "Protocol Governance", "state": "shipped", "shipped_in": "070568a"},
-    {"id": "runtime-semantics", "name": "Deterministic Runtime Semantics", "state": "shipped", "shipped_in": "070568a"},
-    {"id": "transport", "name": "Transport Abstraction Layer", "state": "shipped", "shipped_in": "b42c8c1"},
-    {"id": "identity", "name": "Agent Identity and Trust", "state": "not_started"},
-    {"id": "intent", "name": "Intent Compilation Layer", "state": "not_started"},
-    {"id": "registry", "name": "Package Registry Foundations", "state": "not_started"},
-    {"id": "observability", "name": "Observability and Execution Tracing", "state": "partial", "note": "run --trace and --trace-limit exist; no structured trace export or span model"},
-    {"id": "economics", "name": "Economic Hooks", "state": "not_started"}
+    {
+      "id": "governance",
+      "name": "Protocol Governance",
+      "state": "shipped",
+      "shipped_in": "070568a"
+    },
+    {
+      "id": "runtime-semantics",
+      "name": "Deterministic Runtime Semantics",
+      "state": "shipped",
+      "shipped_in": "070568a"
+    },
+    {
+      "id": "transport",
+      "name": "Transport Abstraction Layer",
+      "state": "shipped",
+      "shipped_in": "b42c8c1"
+    },
+    {
+      "id": "identity",
+      "name": "Agent Identity and Trust",
+      "state": "not_started"
+    },
+    {
+      "id": "intent",
+      "name": "Intent Compilation Layer",
+      "state": "not_started"
+    },
+    {
+      "id": "registry",
+      "name": "Package Registry Foundations",
+      "state": "not_started"
+    },
+    {
+      "id": "observability",
+      "name": "Observability and Execution Tracing",
+      "state": "partial",
+      "note": "run --trace and --trace-limit exist; no structured trace export or span model"
+    },
+    {
+      "id": "economics",
+      "name": "Economic Hooks",
+      "state": "not_started"
+    }
   ],
   "superseded": [
     {
       "path": "docs/NEXT_ACTIONS.md",
       "reason": "Written before Phase 2; four of its five items were already implemented. Audited 2026-08-27 and reduced to a pointer at this file.",
       "audit": [
-        {"item": "malformed-binary corpus tests", "verdict": "partial", "evidence": "tests/test_malformed.py covers parse_module only; bundles, manifests and hello payloads were uncovered", "carried_to": "harden-malformed-corpus"},
-        {"item": "signature verification draft (public/private key)", "verdict": "done_with_caveat", "evidence": "alp/integrity.py implements rsa-demo sign/verify; 24-bit unpadded modulus, not a real signature scheme", "carried_to": "security-model-doc"},
-        {"item": "instruction-level trace filtering (--trace-limit)", "verdict": "done", "evidence": "alp/cli.py p_run --trace-limit"},
-        {"item": "workflow report script comparing outputs over repeated runs", "verdict": "done", "evidence": "alp determinism report"},
-        {"item": "ecosystem onboarding docs", "verdict": "done", "evidence": "docs/ONBOARDING.md, docs/INTEROP_PACK.md"}
+        {
+          "item": "malformed-binary corpus tests",
+          "verdict": "partial",
+          "evidence": "tests/test_malformed.py covers parse_module only; bundles, manifests and hello payloads were uncovered",
+          "carried_to": "harden-malformed-corpus"
+        },
+        {
+          "item": "signature verification draft (public/private key)",
+          "verdict": "done_with_caveat",
+          "evidence": "alp/integrity.py implements rsa-demo sign/verify; 24-bit unpadded modulus, not a real signature scheme",
+          "carried_to": "security-model-doc"
+        },
+        {
+          "item": "instruction-level trace filtering (--trace-limit)",
+          "verdict": "done",
+          "evidence": "alp/cli.py p_run --trace-limit"
+        },
+        {
+          "item": "workflow report script comparing outputs over repeated runs",
+          "verdict": "done",
+          "evidence": "alp determinism report"
+        },
+        {
+          "item": "ecosystem onboarding docs",
+          "verdict": "done",
+          "evidence": "docs/ONBOARDING.md, docs/INTEROP_PACK.md"
+        }
       ]
     }
   ],
@@ -105,5 +163,6 @@
       "why_deferred": "Conflicts with the stated zero-dependency stance (agent-manifest.json external_packages is empty). Needs an explicit decision on whether OpenALP takes a crypto dependency or ships a vendored implementation.",
       "decision_owner": "human"
     }
-  ]
+  ],
+  "agent_runbook": "docs/AGENT_RUNBOOK.md"
 }

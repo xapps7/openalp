@@ -22,6 +22,7 @@ test -f "$ROOT/CHANGELOG.md"
 test -f "$ROOT/spec/transport-envelope-v0.2.json"
 test -f "$ROOT/spec/transport-semantics-v0.2.md"
 test -f "$ROOT/docs/SECURITY_MODEL.md"
+test -f "$ROOT/docs/AGENT_RUNBOOK.md"
 test -f "$ROOT/docs/status.json"
 PYTHONPATH="$ROOT" python3 -c "import json,sys; d=json.load(open('$ROOT/docs/status.json')); sys.exit(0 if d.get('week',{}).get('tasks') else 1)"
 "$ROOT/scripts/setup.sh" >/tmp/openalp-setup.out
