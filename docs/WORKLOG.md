@@ -127,6 +127,17 @@
   - queued six ordered phase-1 tasks; phase discipline added to the runbook
   - deferred intent compilation and interop adapters to phase 2
 
+### Block 8
+
+- Duration: `0.5h`
+- Focus: Unblock phase 1
+- Output:
+  - forbade agents from settling permanent decisions (wire formats, numeric semantics, hash preimages, protocol versions)
+  - `D1` numeric model decided: i64 two's complement, wrapping add/sub/mul, division truncating toward zero, traps on div-by-zero and `-2^63 / -1`, `PRINT_CHAR` total over the low 8 bits
+  - `D2` modules are closed computations; invariant drops "canonical input"; `step_budget` becomes a required profile field, resolving `F4`
+  - six of eight findings now resolved by decision rather than deferred
+  - all six phase-1 tasks unblocked
+
 ### Total
 
-- `10.0h`
+- `10.5h`
