@@ -61,6 +61,21 @@ While this phase is active:
 - Changing observable behaviour is in scope only where a finding says the current behaviour is unspecifiable, and only with the finding cited.
 - Every normative statement written must have a test that fails when the statement is violated. A specification with no executable consequence is documentation.
 
+## Blocked tasks — never decide for the human
+
+A task in `docs/status.json` may carry `blocked_reason`, and a finding may carry `decision_owner: "human"`. These are hard stops, not advisory notes.
+
+If the next eligible task is blocked on a human decision:
+
+1. Do **not** implement it.
+2. Do **not** pick the recommended option yourself because it is reasonable, well-argued, or the only sensible choice. A recommendation is not a decision.
+3. Do **not** skip past it to a later task that would settle the same question implicitly — writing the numeric-behaviour section of a specification decides the numeric model just as surely as writing the code does.
+4. Report which decision is outstanding, what it blocks, and stop. That is a complete and successful run.
+
+The distinction that matters: an agent may decide anything reversible by a later commit. It may not decide anything that becomes permanent the moment something else is built on it — wire formats, numeric semantics, hash preimages, protocol versions. Those outlive the repo and cannot be walked back once a second implementation exists.
+
+If every task in the active phase is blocked this way, say so plainly and stop. An idle run with a clear explanation is a better outcome than a decision nobody authorised.
+
 ## The admission test — apply before writing any code
 
 OpenALP's purpose is not to grow. It is to become impossible to replace. Most of what an agent protocol could plausibly build is already shipped by MCP, by A2A, or by ordinary tool calling, and every line of that kind makes OpenALP more replaceable, not less — it enlarges the surface someone else already maintains better.

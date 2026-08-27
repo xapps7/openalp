@@ -170,6 +170,14 @@
           "canonical traps for divide-by-zero and INT_MIN / -1",
           "PRINT_CHAR total over the whole integer range",
           "differential tests against a reference i64 implementation of each operation"
+        ],
+        "decision_owner": "human",
+        "blocks": [
+          "p1-execution-semantics",
+          "p1-canonical-encoding",
+          "p1-result-hash",
+          "p1-golden-vectors",
+          "p1-conformance-tests"
         ]
       },
       {
@@ -187,7 +195,9 @@
           "external interaction: states explicitly that the deterministic core is closed, and where the boundary lies",
           "concurrency: states that execution is strictly sequential and unobservable concurrency is forbidden",
           "every statement traceable to a conformance test"
-        ]
+        ],
+        "blocked_reason": "Depends on p1-numeric-model (F1) and on the input-model decision (F6). Writing the numeric-behaviour or external-interaction sections would settle both by prose.",
+        "decision_owner": "human"
       },
       {
         "id": "p1-canonical-encoding",
@@ -202,7 +212,8 @@
           "canonical encoding for the execution profile and for the result, including traps",
           "output specified as bytes, never text",
           "canonicalization is total and injective: distinct results never share an encoding"
-        ]
+        ],
+        "blocked_reason": "Downstream of p1-numeric-model. Every canonical encoding, hash preimage and golden vector depends on the numeric model."
       },
       {
         "id": "p1-result-hash",
@@ -217,7 +228,8 @@
           "hash preimage fully specified: artifact bytes, profile, input, result",
           "implemented as a library function and an `alp hash` CLI command",
           "a trap produces a hash exactly as a successful halt does"
-        ]
+        ],
+        "blocked_reason": "Downstream of p1-numeric-model. Every canonical encoding, hash preimage and golden vector depends on the numeric model."
       },
       {
         "id": "p1-golden-vectors",
@@ -234,7 +246,8 @@
           "vectors for byte output across the full 0-255 range",
           "each vector carries artifact bytes, profile, expected result and expected hash",
           "stored outside samples/ so gen_samples.py can never regenerate them"
-        ]
+        ],
+        "blocked_reason": "Downstream of p1-numeric-model. Every canonical encoding, hash preimage and golden vector depends on the numeric model."
       },
       {
         "id": "p1-conformance-tests",
@@ -249,7 +262,8 @@
           "property test: re-running any golden vector reproduces its hash exactly",
           "negative test: a non-canonical encoding is rejected rather than normalized",
           "a coverage report listing any normative statement with no test"
-        ]
+        ],
+        "blocked_reason": "Downstream of p1-numeric-model. Every canonical encoding, hash preimage and golden vector depends on the numeric model."
       },
       {
         "id": "deprecate-transport-surface",
@@ -550,5 +564,13 @@
         "recommended_resolution": "State that the execution model is strictly sequential and that no conforming implementation may observe or introduce concurrency within a single execution."
       }
     ]
+  },
+  "blocking_summary": {
+    "state": "phase 1 is fully blocked",
+    "on": [
+      "F1 integer width and overflow semantics",
+      "F6 input model: closed computations or defined input"
+    ],
+    "note": "No phase-1 task can start until both are answered. Both are permanent once anything is built on them."
   }
 }
