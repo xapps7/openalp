@@ -1,0 +1,109 @@
+{
+  "project": "OpenALP",
+  "protocol": "ALP",
+  "protocol_version": "0.2",
+  "as_of": "2026-08-27",
+  "authority": "This file is the single machine-readable source of truth for project status and the active work queue. Prose roadmap documents are historical context and do not override it.",
+  "rules": [
+    "Work locally. Do not push to git without explicit approval.",
+    "Tests require PYTHONPATH set to the repo root.",
+    "Every change must pass the full suite and scripts/launch_check.sh before commit.",
+    "Prefer machine-readable specs over conceptual notes."
+  ],
+  "verification_gate": [
+    "export PYTHONPATH=\"$PWD\"",
+    "python3 -m unittest discover -s tests -p 'test_*.py' -q",
+    "./scripts/launch_check.sh"
+  ],
+  "tracks": [
+    {"id": "governance", "name": "Protocol Governance", "state": "shipped", "shipped_in": "070568a"},
+    {"id": "runtime-semantics", "name": "Deterministic Runtime Semantics", "state": "shipped", "shipped_in": "070568a"},
+    {"id": "transport", "name": "Transport Abstraction Layer", "state": "shipped", "shipped_in": "b42c8c1"},
+    {"id": "identity", "name": "Agent Identity and Trust", "state": "not_started"},
+    {"id": "intent", "name": "Intent Compilation Layer", "state": "not_started"},
+    {"id": "registry", "name": "Package Registry Foundations", "state": "not_started"},
+    {"id": "observability", "name": "Observability and Execution Tracing", "state": "partial", "note": "run --trace and --trace-limit exist; no structured trace export or span model"},
+    {"id": "economics", "name": "Economic Hooks", "state": "not_started"}
+  ],
+  "superseded": [
+    {
+      "path": "docs/NEXT_ACTIONS.md",
+      "reason": "Written before Phase 2; four of its five items were already implemented. Audited 2026-08-27 and reduced to a pointer at this file.",
+      "audit": [
+        {"item": "malformed-binary corpus tests", "verdict": "partial", "evidence": "tests/test_malformed.py covers parse_module only; bundles, manifests and hello payloads were uncovered", "carried_to": "harden-malformed-corpus"},
+        {"item": "signature verification draft (public/private key)", "verdict": "done_with_caveat", "evidence": "alp/integrity.py implements rsa-demo sign/verify; 24-bit unpadded modulus, not a real signature scheme", "carried_to": "security-model-doc"},
+        {"item": "instruction-level trace filtering (--trace-limit)", "verdict": "done", "evidence": "alp/cli.py p_run --trace-limit"},
+        {"item": "workflow report script comparing outputs over repeated runs", "verdict": "done", "evidence": "alp determinism report"},
+        {"item": "ecosystem onboarding docs", "verdict": "done", "evidence": "docs/ONBOARDING.md, docs/INTEROP_PACK.md"}
+      ]
+    }
+  ],
+  "week": {
+    "id": "2026-W35",
+    "starts": "2026-08-27",
+    "ends": "2026-09-02",
+    "theme": "Close the gaps the transport layer exposed, then start agent identity.",
+    "tasks": [
+      {
+        "id": "reconcile-status",
+        "title": "Reconcile roadmaps into one machine-readable status file",
+        "track": "governance",
+        "state": "done",
+        "why": "Two conflicting roadmaps meant a fresh session could get different marching orders from NEXT_ACTIONS.md and the handoff."
+      },
+      {
+        "id": "transport-clock-mapping",
+        "title": "Specify wall-clock to logical-clock mapping for non-local transports",
+        "track": "transport",
+        "state": "done",
+        "why": "The logical clock keeps the reference transport deterministic but leaves a real network transport unspecified. This blocks any second transport implementation."
+      },
+      {
+        "id": "harden-malformed-corpus",
+        "title": "Extend adversarial corpus to bundles, manifests and hello payloads",
+        "track": "runtime-semantics",
+        "state": "done",
+        "why": "Every untrusted entry point should have a rejection test. Only the module parser had one."
+      },
+      {
+        "id": "security-model-doc",
+        "title": "Document what each trust artifact does and does not prove",
+        "track": "identity",
+        "state": "done",
+        "why": "A 24-bit unpadded RSA demo listed as a trust artifact in an agent-facing manifest is a misread waiting to happen."
+      },
+      {
+        "id": "identity-spec-draft",
+        "title": "Draft agent identity spec: keypair, agent_id derivation, envelope attribution",
+        "track": "identity",
+        "state": "open",
+        "why": "Transport delivers payloads but cannot say who sent them. Identity is the next structural gap, not another feature.",
+        "acceptance": [
+          "spec/agent-identity-v0.2.md defines agent_id derivation and attribution fields",
+          "envelope schema gains an optional signed attribution block",
+          "backward compatible: unattributed envelopes still validate"
+        ]
+      },
+      {
+        "id": "trace-export",
+        "title": "Structured execution trace export from the transport receipt path",
+        "track": "observability",
+        "state": "open",
+        "why": "Receipts record outcomes but not the path taken. Agent debugging needs machine-readable spans, not stdout traces.",
+        "acceptance": [
+          "receipt optionally carries a trace reference",
+          "trace export is deterministic and diffable across runs",
+          "test asserts two identical sends produce byte-identical traces"
+        ]
+      }
+    ]
+  },
+  "deferred": [
+    {
+      "id": "real-signatures",
+      "title": "Replace rsa-demo with a real signature scheme (Ed25519 or RSA-PSS)",
+      "why_deferred": "Conflicts with the stated zero-dependency stance (agent-manifest.json external_packages is empty). Needs an explicit decision on whether OpenALP takes a crypto dependency or ships a vendored implementation.",
+      "decision_owner": "human"
+    }
+  ]
+}

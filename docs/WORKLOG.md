@@ -77,7 +77,19 @@
   - suite now `60` tests passing, `launch_check.sh` ok
   - updated `agent-manifest.json` and `PHASE2_PROGRESS.md`
 
+### Block 4
+
+- Duration: `2.0h`
+- Focus: Roadmap reconciliation and gap closure
+- Output:
+  - added [status.json](/Users/cedcoss/Documents/AgentLang/alp_mvp/docs/status.json) as the single machine-readable work queue
+  - audited `NEXT_ACTIONS.md`: four of five items already shipped, one partial; retired it to a pointer
+  - added Clock Policy section to transport semantics (`step` vs `observed`, quantization rule, determinism downgrade)
+  - added `quantize_ms` and `Transport.describe()` conformance statement
+  - extended adversarial corpus to bundles, manifests and hello payloads (`test_malformed.py`: 4 -> 21 cases)
+  - added [SECURITY_MODEL.md](/Users/cedcoss/Documents/AgentLang/alp_mvp/docs/SECURITY_MODEL.md); flagged 24-bit demo RSA as non-security in `agent-manifest.json`
+  - suite now `80` tests passing
+
 ### Total
 
-- `4.0h`
-
+- `6.0h`

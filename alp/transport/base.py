@@ -91,6 +91,23 @@ class Transport(ABC):
     """
 
     name: str = "abstract"
+    clock_policy: str = "step"
+    quantum_ms: int = 1
+    deterministic_receipts: bool = True
+
+    def describe(self) -> dict[str, object]:
+        """Machine-readable conformance statement.
+
+        Required by spec/transport-semantics-v0.2.md so a caller can tell
+        whether receipts from this transport are reproducible before it
+        depends on them being so.
+        """
+        return {
+            "name": self.name,
+            "clock_policy": self.clock_policy,
+            "quantum_ms": self.quantum_ms,
+            "deterministic_receipts": self.deterministic_receipts,
+        }
 
     @abstractmethod
     def send(self, envelope: Envelope) -> Receipt:

@@ -45,6 +45,18 @@
     "agent_page": "web/agent.html",
     "install_guide": "INSTALL.md",
     "cli": "alp/cli.py",
-    "spec_registry": "spec/index.json"
+    "spec_registry": "spec/index.json",
+    "status": "docs/status.json"
+  },
+  "security": {
+    "model": "docs/SECURITY_MODEL.md",
+    "production_ready": [
+      ".sha256.json",
+      ".sig.json"
+    ],
+    "demonstration_only": [
+      ".rsa.sig.json"
+    ],
+    "notes": "rsa-demo uses a 24-bit unpadded modulus and provides no security. Sender identity is not authenticated; the transport layer assumes a trusted network."
   }
 }

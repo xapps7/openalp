@@ -23,7 +23,13 @@ from .envelope import (
     parse_envelope,
     validate_envelope,
 )
-from .local import LocalTransport, backoff_ms, make_bundle_executor, send_envelope_file
+from .local import (
+    LocalTransport,
+    backoff_ms,
+    make_bundle_executor,
+    quantize_ms,
+    send_envelope_file,
+)
 
 __all__ = [
     "ENVELOPE_VERSION",
@@ -42,6 +48,7 @@ __all__ = [
     "derive_envelope_id",
     "make_bundle_executor",
     "parse_envelope",
+    "quantize_ms",
     "send_envelope_file",
     "status",
     "validate_envelope",

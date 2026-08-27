@@ -40,6 +40,26 @@ def backoff_ms(attempt: int, base: int = DEFAULT_BASE_BACKOFF_MS, cap: int = DEF
     return min(base * (2 ** (attempt - 1)), cap)
 
 
+def quantize_ms(observed_ms: int, quantum_ms: int) -> int:
+    """Map observed wall-clock elapsed onto the logical clock.
+
+    Rounds up, and never returns less than one quantum, so a deadline is
+    never overrun by rounding and an arbitrarily fast transport cannot
+    retry unboundedly inside a finite deadline. See the Clock Policy
+    section of spec/transport-semantics-v0.2.md.
+
+    This function is pure. The reference transport does not call it; it
+    exists so a network transport has one canonical implementation to use
+    rather than inventing its own rounding.
+    """
+    if quantum_ms < 1:
+        raise ValueError("quantum_ms must be >= 1")
+    if observed_ms < 0:
+        raise ValueError("observed_ms must be >= 0")
+    quanta = -(-observed_ms // quantum_ms)  # ceiling division
+    return max(1, quanta) * quantum_ms
+
+
 @dataclass
 class _StreamState:
     last_delivered: int | None = None
@@ -80,6 +100,8 @@ def make_bundle_executor(key_path: Path, max_steps: int = 100_000) -> Executor:
 
 class LocalTransport(Transport):
     name = "local"
+    clock_policy = "step"
+    deterministic_receipts = True
 
     def __init__(
         self,
@@ -91,6 +113,7 @@ class LocalTransport(Transport):
     ) -> None:
         self._executor = executor
         self._clock_step_ms = clock_step_ms
+        self.quantum_ms = clock_step_ms
         self._base_backoff_ms = base_backoff_ms
         self._max_backoff_ms = max_backoff_ms
         self._retain_receipts = retain_receipts

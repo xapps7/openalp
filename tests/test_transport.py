@@ -20,6 +20,7 @@ from alp.transport import (
     content_hash,
     derive_envelope_id,
     parse_envelope,
+    quantize_ms,
     validate_envelope,
 )
 
@@ -166,6 +167,30 @@ class DeliveryTests(unittest.TestCase):
         self.assertEqual(calls["n"], 3)
         self.assertTrue(receipt.error.reason.startswith("attempts_exhausted"))
         self.assertIn("blip", receipt.error.reason)
+
+    def test_clock_policy_is_declared(self) -> None:
+        transport = LocalTransport(executor=ok_executor(), clock_step_ms=5)
+        described = transport.describe()
+        self.assertEqual(described["clock_policy"], "step")
+        self.assertEqual(described["quantum_ms"], 5)
+        self.assertTrue(described["deterministic_receipts"])
+
+    def test_identical_sends_produce_identical_receipts(self) -> None:
+        # The determinism claim, asserted rather than assumed.
+        a = LocalTransport(executor=ok_executor()).send(envelope()).to_json()
+        b = LocalTransport(executor=ok_executor()).send(envelope()).to_json()
+        self.assertEqual(a, b)
+
+    def test_quantize_rounds_up_and_floors_at_one_quantum(self) -> None:
+        self.assertEqual(quantize_ms(0, 10), 10)
+        self.assertEqual(quantize_ms(1, 10), 10)
+        self.assertEqual(quantize_ms(10, 10), 10)
+        self.assertEqual(quantize_ms(11, 10), 20)
+        self.assertEqual(quantize_ms(25, 10), 30)
+        with self.assertRaises(ValueError):
+            quantize_ms(5, 0)
+        with self.assertRaises(ValueError):
+            quantize_ms(-1, 10)
 
     def test_backoff_schedule_is_deterministic_and_capped(self) -> None:
         self.assertEqual([backoff_ms(n) for n in range(1, 5)], [100, 200, 400, 800])
