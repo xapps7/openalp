@@ -1,0 +1,99 @@
+{
+  "corpus": "v0.2.0",
+  "frozen_at": "2026-08-27",
+  "protocol_version": "0.2",
+  "module_format_version": 1,
+  "purpose": "Artifacts captured at a known-good commit and never regenerated. samples/gen_samples.py rewrites samples/ from the code under test before every gate run, so samples validate the format only against itself. These do not. A change that alters encoding, execution or bundle layout breaks these tests instead of silently redefining what correct means.",
+  "rules": [
+    "Never regenerate these files to make a test pass.",
+    "A failure here means either a real regression or a deliberate format change.",
+    "A deliberate format change gets a NEW corpus directory plus a documented migration; this one stays."
+  ],
+  "artifacts": [
+    {
+      "file": "add.alp",
+      "bytes": 28,
+      "sha256": "e61e9cff25deeb983a1caf95fcb7f1bd658e530f40867bba881702640d22ff61",
+      "module": {
+        "version": 1,
+        "entry": 0,
+        "instructions": 4
+      },
+      "execution": {
+        "halted": true,
+        "steps": 4,
+        "top": 12,
+        "stack": [
+          12
+        ],
+        "output": ""
+      }
+    },
+    {
+      "file": "add.alp.sha256.json",
+      "bytes": 131,
+      "sha256": "6aa24fee72c0e51e50470d722b2eb383d4a46c549e6968c3cbb6e704aa7d2f92"
+    },
+    {
+      "file": "add.alp.sig.json",
+      "bytes": 137,
+      "sha256": "13a9f205e632c876de8bf4fda65c6e8e5a8895e6ed9d589cbb721cf35f9a37aa"
+    },
+    {
+      "file": "add.alpe.json",
+      "bytes": 917,
+      "sha256": "c0fd22b049423cbe88c3056c70c5a95cd6f9213deaf3ef77eb751cbd3b485476"
+    },
+    {
+      "file": "add.alpp.json",
+      "bytes": 658,
+      "sha256": "ebaa04a2de4415dd6bb12d2e4d7f1ef941d634466e7d83a220218c7951ec3786"
+    },
+    {
+      "file": "add.alppb",
+      "bytes": 344,
+      "sha256": "125ef8d31a6363f5e50494ce03db79e80cf7faf018b65fef9a32b2121cce6eaf"
+    },
+    {
+      "file": "branch.alp",
+      "bytes": 40,
+      "sha256": "4de6c742c871b461dce0ed75479c3404059c3be5417315644f0238e6e6054ef4",
+      "module": {
+        "version": 1,
+        "entry": 0,
+        "instructions": 7
+      },
+      "execution": {
+        "halted": true,
+        "steps": 4,
+        "top": 42,
+        "stack": [
+          42
+        ],
+        "output": ""
+      }
+    },
+    {
+      "file": "hello.alp",
+      "bytes": 64,
+      "sha256": "e0e64cfaadb38ae8ecee6bf4554a873c75d487265eaa45739e0ff4373a9f3ea2",
+      "module": {
+        "version": 1,
+        "entry": 0,
+        "instructions": 13
+      },
+      "execution": {
+        "halted": true,
+        "steps": 13,
+        "top": null,
+        "stack": [],
+        "output": "Hello\n"
+      }
+    },
+    {
+      "file": "hello_ref_vm.json",
+      "bytes": 117,
+      "sha256": "51016a466b0b018b93a17aff28548fa2a29bbbbd12794ad803a376a71b33d06c"
+    }
+  ]
+}

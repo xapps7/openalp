@@ -1,0 +1,145 @@
+from __future__ import annotations
+
+"""Conformance against frozen artifacts.
+
+Why this file exists: samples/gen_samples.py rewrites samples/ from the
+code under test, and scripts/quality_gate.sh runs it first. So every
+other test validates the binary format against the same code that
+produced it. If the encoding changed, the samples would regenerate to
+match and the whole suite would stay green while every previously
+published .alp file quietly became unreadable.
+
+The artifacts in tests/fixtures/v0.2.0/ were captured at a known-good
+commit and are never regenerated. They are the only thing in the repo
+that can fail when the format drifts.
+
+If a test here fails, do NOT re-freeze the corpus to make it pass. Either
+it is a regression, or it is a deliberate format change that needs a new
+corpus directory and a documented migration.
+"""
+
+import hashlib
+import json
+import unittest
+from pathlib import Path
+
+from alp.bundle import run_bundle
+from alp.format import parse_module
+from alp.handshake import compatibility, parse_hello
+from alp.transport import LocalTransport, make_bundle_executor, parse_envelope
+from alp.transport import status as st
+from alp.vm import run_module
+
+CORPUS = Path(__file__).parent / "fixtures" / "v0.2.0"
+MANIFEST = json.loads((CORPUS / "conformance.json").read_text())
+ARTIFACTS = {entry["file"]: entry for entry in MANIFEST["artifacts"]}
+
+
+class CorpusIntegrityTests(unittest.TestCase):
+    """The corpus must not have been quietly regenerated."""
+
+    def test_every_artifact_matches_its_recorded_digest(self) -> None:
+        for name, entry in ARTIFACTS.items():
+            with self.subTest(artifact=name):
+                raw = (CORPUS / name).read_bytes()
+                self.assertEqual(
+                    hashlib.sha256(raw).hexdigest(),
+                    entry["sha256"],
+                    f"{name} differs from the frozen corpus. If this was deliberate, "
+                    "create a new corpus directory rather than editing this one.",
+                )
+                self.assertEqual(len(raw), entry["bytes"])
+
+    def test_corpus_is_not_empty(self) -> None:
+        self.assertGreaterEqual(len(ARTIFACTS), 8)
+
+
+class FrozenModuleTests(unittest.TestCase):
+    """Frozen modules must still parse and execute identically."""
+
+    def _modules(self):
+        return [(n, e) for n, e in ARTIFACTS.items() if n.endswith(".alp")]
+
+    def test_frozen_modules_still_parse(self) -> None:
+        for name, entry in self._modules():
+            with self.subTest(module=name):
+                module = parse_module((CORPUS / name).read_bytes())
+                self.assertEqual(module.version, entry["module"]["version"])
+                self.assertEqual(module.entry, entry["module"]["entry"])
+                self.assertEqual(len(module.instructions), entry["module"]["instructions"])
+
+    def test_frozen_modules_execute_to_recorded_results(self) -> None:
+        for name, entry in self._modules():
+            with self.subTest(module=name):
+                module = parse_module((CORPUS / name).read_bytes())
+                result = run_module(module, max_steps=100_000)
+                expected = entry["execution"]
+                self.assertEqual(result.halted, expected["halted"])
+                self.assertEqual(result.steps, expected["steps"])
+                self.assertEqual(result.top, expected["top"])
+                self.assertEqual(list(result.stack), expected["stack"])
+                self.assertEqual(result.output, expected["output"])
+
+    def test_module_format_version_has_not_moved(self) -> None:
+        from alp.format import VERSION
+
+        self.assertEqual(
+            VERSION,
+            MANIFEST["module_format_version"],
+            "Module format version changed. Every artifact ever published at the "
+            "old version needs a migration path before this test is updated.",
+        )
+
+
+class FrozenBundleTests(unittest.TestCase):
+    """Frozen bundles must still verify and run through the full trust path."""
+
+    KEY = Path(__file__).parent.parent / "samples" / "dev_hmac.key"
+
+    def test_frozen_json_bundle_still_runs(self) -> None:
+        result = run_bundle(CORPUS / "add.alpp.json", self.KEY)
+        self.assertEqual(result.top, 12)
+        self.assertTrue(result.verified_checksum)
+        self.assertTrue(result.verified_signature)
+
+    def test_frozen_binary_bundle_still_runs(self) -> None:
+        result = run_bundle(CORPUS / "add.alppb", self.KEY)
+        self.assertEqual(result.top, 12)
+
+    def test_both_bundle_encodings_agree(self) -> None:
+        a = run_bundle(CORPUS / "add.alpp.json", self.KEY)
+        b = run_bundle(CORPUS / "add.alppb", self.KEY)
+        self.assertEqual((a.top, a.steps, a.output), (b.top, b.steps, b.output))
+
+
+class FrozenProtocolTests(unittest.TestCase):
+    """Governance promises must hold against artifacts that predate them."""
+
+    def test_deprecated_hello_is_still_accepted(self) -> None:
+        # add.alpp.json carries a 0.1 hello. The governance layer promises
+        # 0.1 is deprecated but accepted; this is that promise under test
+        # against a real artifact rather than a constructed one.
+        payload = json.loads((CORPUS / "add.alpp.json").read_text())
+        hello = parse_hello(payload["hello"])
+        self.assertEqual(hello.version, "0.1")
+        result = compatibility(hello)
+        self.assertTrue(result["compatible"])
+        self.assertTrue(result["deprecated"])
+        self.assertEqual(result["replacement"], "0.2")
+
+    def test_frozen_envelope_identity_is_stable(self) -> None:
+        # envelope_id is content-derived. If this changes, every previously
+        # issued receipt stops matching and idempotency silently breaks.
+        envelope = parse_envelope(json.loads((CORPUS / "add.alpe.json").read_text()))
+        self.assertEqual(envelope.envelope_id, "75e5fdadc3721f8b6792881ec7e13d96")
+
+    def test_frozen_envelope_still_delivers(self) -> None:
+        envelope = parse_envelope(json.loads((CORPUS / "add.alpe.json").read_text()))
+        transport = LocalTransport(executor=make_bundle_executor(FrozenBundleTests.KEY))
+        receipt = transport.send(envelope)
+        self.assertEqual(receipt.status, st.SUCCEEDED)
+        self.assertEqual(receipt.result.top, 12)
+
+
+if __name__ == "__main__":
+    unittest.main()

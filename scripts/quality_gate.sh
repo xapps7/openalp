@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 export PYTHONPATH="$ROOT"
+export PYTHONPYCACHEPREFIX="${TMPDIR:-/tmp}/alp-pycache"  # keep bytecode off network/fuse mounts; see docs/AGENT_RUNBOOK.md
 
 python3 "$ROOT/samples/gen_samples.py"
 python3 -m alp.cli build-raw "$ROOT/samples/hello.alpb" "$ROOT/samples/hello_from_raw.alp"

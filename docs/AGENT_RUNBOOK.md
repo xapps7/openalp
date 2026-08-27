@@ -33,6 +33,20 @@ rm -f .git/HEAD.lock .git/index.lock
 find .git/objects -name 'tmp_obj_*' -delete
 ```
 
+7. **Always export `PYTHONPYCACHEPREFIX` before running anything.** The repo lives on a fuse mount with one-second mtime granularity. Python validates cached bytecode by comparing source mtime and size — so an edit that keeps a file the same length and lands in the same second as the previous run leaves Python happily executing the *old* bytecode. A run can then edit code, see tests pass, and commit a change that was never actually executed.
+
+```bash
+export PYTHONPYCACHEPREFIX="${TMPDIR:-/tmp}/alp-pycache"
+```
+
+The gate scripts set this themselves. Set it for any ad-hoc command too. `.pyc` files already written under the mount cannot reliably be deleted; if you suspect a stale one, bump source mtimes instead:
+
+```bash
+find alp tests samples -name '*.py' -exec touch {} +
+```
+
+This is not theoretical. It was observed on 2026-08-27: a same-length edit produced a source and a cached `.pyc` sharing mtime `1787817261`, and the suite reported failures from code that no longer existed on disk.
+
 ## Work selection
 
 Pick **exactly one** task from `week.tasks[]` in `docs/status.json` with `state: "open"`, in listed order.

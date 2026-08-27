@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+export PYTHONPYCACHEPREFIX="${TMPDIR:-/tmp}/alp-pycache"  # keep bytecode off network/fuse mounts; see docs/AGENT_RUNBOOK.md
 
 "$ROOT/scripts/quality_gate.sh"
 
@@ -23,6 +24,8 @@ test -f "$ROOT/spec/transport-envelope-v0.2.json"
 test -f "$ROOT/spec/transport-semantics-v0.2.md"
 test -f "$ROOT/docs/SECURITY_MODEL.md"
 test -f "$ROOT/docs/AGENT_RUNBOOK.md"
+test -f "$ROOT/tests/fixtures/v0.2.0/conformance.json"
+PYTHONPATH="$ROOT" python3 -m unittest tests.test_conformance -q
 test -f "$ROOT/docs/status.json"
 PYTHONPATH="$ROOT" python3 -c "import json,sys; d=json.load(open('$ROOT/docs/status.json')); sys.exit(0 if d.get('week',{}).get('tasks') else 1)"
 "$ROOT/scripts/setup.sh" >/tmp/openalp-setup.out

@@ -7,6 +7,11 @@ from alp.format import Instruction, Module, VERSION, encode_module
 
 ROOT = Path(__file__).resolve().parent
 
+# NOTE: this script regenerates samples/ from the current code, so samples
+# validate the format only against themselves. The frozen corpus in
+# tests/fixtures/ is deliberately outside this path and must never be
+# regenerated here. See tests/test_conformance.py.
+
 
 def write(name: str, instructions: list[Instruction], entry: int = 0) -> None:
     module = Module(version=VERSION, flags=0, entry=entry, instructions=tuple(instructions))
