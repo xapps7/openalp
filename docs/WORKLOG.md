@@ -138,6 +138,19 @@
   - six of eight findings now resolved by decision rather than deferred
   - all six phase-1 tasks unblocked
 
+### Block 9
+
+- Duration: `1.0h`
+- Focus: `p1-numeric-model` implemented; agent execution failure diagnosed
+- Output:
+  - implemented D1 in `alp/vm.py`: `wrap_i64`, `div_i64`, `VMTrap` with canonical codes
+  - ADD/SUB/MUL now compute modulo 2^64 and never trap; DIV truncates toward zero
+  - `trap.div_by_zero` and `trap.div_overflow` are the first canonical trap codes
+  - `PRINT_CHAR` total over the i64 range, emitting low 8 bits — all 256 byte values now reachable
+  - added `tests/test_numeric.py` (18 cases), including a differential check that division matches C semantics
+  - suite `91` -> `109`; frozen corpus v0.2.0 verified unchanged, so no migration needed
+  - diagnosed why no agent work landed: both scheduled tasks run with `FOLDERS_STATE_NONE`
+
 ### Total
 
-- `10.5h`
+- `11.5h`

@@ -9,6 +9,51 @@ class VMError(RuntimeError):
     pass
 
 
+class VMTrap(VMError):
+    """A deterministic, canonically identified execution trap.
+
+    A trap is a normal outcome of execution, not an absence of one. It
+    carries a stable code so two implementations can establish that they
+    failed the same way. See decision D1-numeric-model in docs/status.json.
+    """
+
+    def __init__(self, code: str, detail: str = "") -> None:
+        self.code = code
+        super().__init__(f"{code}: {detail}" if detail else code)
+
+
+# D1-numeric-model: values are 64-bit two's complement integers.
+INT64_MIN = -(1 << 63)
+INT64_MAX = (1 << 63) - 1
+_UINT64_MASK = (1 << 64) - 1
+
+
+def wrap_i64(value: int) -> int:
+    """Reduce an integer into the i64 range, wrapping modulo 2**64.
+
+    ADD, SUB and MUL are defined modulo 2**64 and never trap, so every
+    arithmetic result passes through here. Without this the VM computes in
+    Python's arbitrary-precision integers and disagrees with any
+    implementation in C, Rust, Go or WASM (finding F1).
+    """
+    value &= _UINT64_MASK
+    return value - (1 << 64) if value > INT64_MAX else value
+
+
+def div_i64(lhs: int, rhs: int) -> int:
+    """Signed division truncating toward zero.
+
+    Python's // floors toward negative infinity, so -7 // 2 is -4 where
+    every other candidate implementation language gives -3 (finding F2).
+    """
+    if rhs == 0:
+        raise VMTrap("trap.div_by_zero", "divisor is zero")
+    if lhs == INT64_MIN and rhs == -1:
+        raise VMTrap("trap.div_overflow", "quotient is not representable in i64")
+    quotient = abs(lhs) // abs(rhs)
+    return -quotient if (lhs < 0) != (rhs < 0) else quotient
+
+
 @dataclass
 class VMResult:
     halted: bool
@@ -23,6 +68,7 @@ class VMResult:
 
 
 def _as_i8(value: int) -> int:
+    """PUSH_CONST reads its operand as signed 8-bit, then widens to i64."""
     return value - 256 if value > 127 else value
 
 
@@ -53,24 +99,22 @@ def run_module(module: Module, max_steps: int = 100_000, trace: bool = False) ->
             _require_stack(stack, 2, "ADD")
             rhs = stack.pop()
             lhs = stack.pop()
-            stack.append(lhs + rhs)
+            stack.append(wrap_i64(lhs + rhs))
         elif op == 0x03:  # SUB
             _require_stack(stack, 2, "SUB")
             rhs = stack.pop()
             lhs = stack.pop()
-            stack.append(lhs - rhs)
+            stack.append(wrap_i64(lhs - rhs))
         elif op == 0x04:  # MUL
             _require_stack(stack, 2, "MUL")
             rhs = stack.pop()
             lhs = stack.pop()
-            stack.append(lhs * rhs)
+            stack.append(wrap_i64(lhs * rhs))
         elif op == 0x05:  # DIV
             _require_stack(stack, 2, "DIV")
             rhs = stack.pop()
             lhs = stack.pop()
-            if rhs == 0:
-                raise VMError("division by zero")
-            stack.append(lhs // rhs)
+            stack.append(wrap_i64(div_i64(lhs, rhs)))
         elif op == 0x06:  # JMP
             ip = inst.a
         elif op == 0x07:  # JZ
@@ -89,9 +133,10 @@ def run_module(module: Module, max_steps: int = 100_000, trace: bool = False) ->
         elif op == 0x0B:  # PRINT_CHAR
             _require_stack(stack, 1, "PRINT_CHAR")
             value = stack.pop()
-            if value < 0 or value > 255:
-                raise VMError(f"PRINT_CHAR expects byte range 0..255, got {value}")
-            output_chars.append(chr(value))
+            # D1: total over the whole i64 range. Emits the low 8 bits, so
+            # bytes 128-255 are reachable, which they were not while
+            # PUSH_CONST sign-extended and PRINT_CHAR demanded 0..255 (F3).
+            output_chars.append(chr(value & 0xFF))
         else:
             raise VMError(f"unknown opcode during execution: {op:#04x}")
 

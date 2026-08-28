@@ -160,7 +160,7 @@
         "phase": "phase-1-specification",
         "order": 1,
         "title": "Fix the numeric model: width, overflow, division, operand widening",
-        "state": "open",
+        "state": "done",
         "pillar": "deterministic machine representation",
         "why": "Resolves F1, F2 and F3. Nothing downstream can be hashed until arithmetic is defined, because every golden vector depends on it. This is the blocking task of the phase.",
         "acceptance": [
@@ -180,6 +180,13 @@
         "unblocked_by": [
           "D1-numeric-model",
           "D2-closed-computations"
+        ],
+        "completed": "2026-08-28",
+        "completed_by": "interactive session (scheduled agent could not reach the folder)",
+        "notes": [
+          "Implements D1 numeric semantics only. D1's output-as-bytes clause is deferred to p1-canonical-encoding, where the whole result encoding is defined \u2014 changing the result shape twice would be worse than once.",
+          "trap.div_by_zero and trap.div_overflow introduced as the first canonical trap codes. The full trap taxonomy (F5) belongs to p1-execution-semantics.",
+          "Frozen corpus v0.2.0 verified unchanged: no golden artifact's recorded result moved under D1, so no migration was required."
         ]
       },
       {
@@ -201,7 +208,8 @@
         "unblocked_by": [
           "D1-numeric-model",
           "D2-closed-computations"
-        ]
+        ],
+        "inherits": "F5 trap taxonomy. trap.div_by_zero and trap.div_overflow already exist; the closed set is defined here."
       },
       {
         "id": "p1-canonical-encoding",
@@ -220,7 +228,8 @@
         "unblocked_by": [
           "D1-numeric-model",
           "D2-closed-computations"
-        ]
+        ],
+        "inherits": "D1 clause: output is a byte string, never text, no encoding. Deferred here from p1-numeric-model."
       },
       {
         "id": "p1-result-hash",
@@ -522,7 +531,7 @@
         "consequence": "Any implementation in C, Rust, Go or WASM overflows at 64 bits and produces a different result for the same artifact. There is no defined width, no defined overflow behaviour.",
         "recommended_resolution": "Adopt i64 two's complement with wrapping add/sub/mul, following the WASM numeric model \u2014 the most heavily studied deterministic execution spec available.",
         "decision_owner": "human",
-        "status": "resolved by D1-numeric-model"
+        "status": "resolved by D1-numeric-model, implemented 2026-08-28"
       },
       {
         "id": "F2",
@@ -531,7 +540,7 @@
         "observed": "DIV uses Python floor division. -7 / 2 evaluates to -4.",
         "consequence": "C, Rust, Go and WASM all truncate toward zero and produce -3. Silent divergence on every negative division.",
         "recommended_resolution": "Truncate toward zero. Trap on divide-by-zero and on INT64_MIN / -1, both as canonical traps.",
-        "status": "resolved by D1-numeric-model"
+        "status": "resolved by D1-numeric-model, implemented 2026-08-28"
       },
       {
         "id": "F3",
@@ -540,7 +549,7 @@
         "observed": "PUSH_CONST sign-extends an 8-bit operand, so operand 200 becomes -56. PRINT_CHAR requires 0..255 and rejects negatives.",
         "consequence": "Byte values 128-255 are unreachable from a constant. The two width models contradict each other inside one instruction set.",
         "recommended_resolution": "State one width model: operands sign-extend i8 to i64, and PRINT_CHAR emits value & 0xFF as a total function with no trap.",
-        "status": "resolved by D1-numeric-model"
+        "status": "resolved by D1-numeric-model, implemented 2026-08-28"
       },
       {
         "id": "F4",
@@ -638,5 +647,14 @@
       "permanence": "Reversible by extension, not by amendment. Adding input later means a new profile field and a new preimage version."
     }
   ],
-  "invariant": "same artifact + same execution profile = same canonical result hash"
+  "invariant": "same artifact + same execution profile = same canonical result hash",
+  "agent_incidents": [
+    {
+      "date": "2026-08-28",
+      "summary": "Two scheduled runs produced nothing. The manual fire on 27 Aug reported SUCCEEDED after 61 seconds with no commit and no task claimed; the 28 Aug scheduled run did not execute and the task was suspended with device_absent.",
+      "root_cause": "Both scheduled tasks carry folders_state FOLDERS_STATE_NONE \u2014 no folder grant is attached to their runs, so a run cannot read this repo even when the device is reachable.",
+      "lesson": "A SUCCEEDED run status means the session completed, not that work happened. Trust the commit log, never the run status.",
+      "action": "Task re-enabled. Folder access must be granted to the scheduled task from the desktop app; it cannot be attached remotely."
+    }
+  ]
 }
