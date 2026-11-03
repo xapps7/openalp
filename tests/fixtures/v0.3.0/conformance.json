@@ -1,0 +1,115 @@
+{
+  "corpus": "v0.3.0",
+  "frozen_at": "2026-11-03",
+  "supersedes": "v0.2.0",
+  "protocol_version": "0.2",
+  "module_format_version": 1,
+  "profile": {
+    "profile_version": "1",
+    "protocol_version": "0.2",
+    "module_format_version": 1,
+    "step_budget": 100000
+  },
+  "purpose": "Artifacts captured at a known-good commit and never regenerated. The artifact bytes are identical to v0.2.0; what changed is how an execution result is recorded. v0.2.0 stored output as a text string, which DETERMINISTIC_SEMANTICS.md section 5 says is wrong: output is bytes and carries no encoding. This corpus records the canonical result form instead.",
+  "migration_from_v0.2.0": [
+    "v0.2.0 remains in the tree, byte-identical, and its artifact digests are still checked.",
+    "Its recorded `execution` field used output as text and is superseded, not corrected in place.",
+    "Each artifact here carries `canonical_result` plus the exact canonical JSON string, so a second implementation can compare bytes rather than re-deriving the serialization.",
+    "The execution profile is recorded, because a result without its profile is not comparable."
+  ],
+  "rules": [
+    "Never regenerate these files to make a test pass.",
+    "A failure here is either a real regression or a deliberate format change.",
+    "A deliberate change gets a NEW corpus directory plus a documented migration; this one stays."
+  ],
+  "artifacts": [
+    {
+      "file": "add.alp",
+      "bytes": 28,
+      "sha256": "e61e9cff25deeb983a1caf95fcb7f1bd658e530f40867bba881702640d22ff61",
+      "module": {
+        "version": 1,
+        "entry": 0,
+        "instructions": 4
+      },
+      "canonical_result": {
+        "result_version": "1",
+        "outcome": "halted",
+        "steps": 4,
+        "stack": [
+          12
+        ],
+        "output_hex": ""
+      },
+      "canonical_result_json": "{\"outcome\":\"halted\",\"output_hex\":\"\",\"result_version\":\"1\",\"stack\":[12],\"steps\":4}"
+    },
+    {
+      "file": "add.alp.sha256.json",
+      "bytes": 131,
+      "sha256": "6aa24fee72c0e51e50470d722b2eb383d4a46c549e6968c3cbb6e704aa7d2f92"
+    },
+    {
+      "file": "add.alp.sig.json",
+      "bytes": 137,
+      "sha256": "13a9f205e632c876de8bf4fda65c6e8e5a8895e6ed9d589cbb721cf35f9a37aa"
+    },
+    {
+      "file": "add.alpe.json",
+      "bytes": 917,
+      "sha256": "c0fd22b049423cbe88c3056c70c5a95cd6f9213deaf3ef77eb751cbd3b485476"
+    },
+    {
+      "file": "add.alpp.json",
+      "bytes": 658,
+      "sha256": "ebaa04a2de4415dd6bb12d2e4d7f1ef941d634466e7d83a220218c7951ec3786"
+    },
+    {
+      "file": "add.alppb",
+      "bytes": 344,
+      "sha256": "125ef8d31a6363f5e50494ce03db79e80cf7faf018b65fef9a32b2121cce6eaf"
+    },
+    {
+      "file": "branch.alp",
+      "bytes": 40,
+      "sha256": "4de6c742c871b461dce0ed75479c3404059c3be5417315644f0238e6e6054ef4",
+      "module": {
+        "version": 1,
+        "entry": 0,
+        "instructions": 7
+      },
+      "canonical_result": {
+        "result_version": "1",
+        "outcome": "halted",
+        "steps": 4,
+        "stack": [
+          42
+        ],
+        "output_hex": ""
+      },
+      "canonical_result_json": "{\"outcome\":\"halted\",\"output_hex\":\"\",\"result_version\":\"1\",\"stack\":[42],\"steps\":4}"
+    },
+    {
+      "file": "hello.alp",
+      "bytes": 64,
+      "sha256": "e0e64cfaadb38ae8ecee6bf4554a873c75d487265eaa45739e0ff4373a9f3ea2",
+      "module": {
+        "version": 1,
+        "entry": 0,
+        "instructions": 13
+      },
+      "canonical_result": {
+        "result_version": "1",
+        "outcome": "halted",
+        "steps": 13,
+        "stack": [],
+        "output_hex": "48656c6c6f0a"
+      },
+      "canonical_result_json": "{\"outcome\":\"halted\",\"output_hex\":\"48656c6c6f0a\",\"result_version\":\"1\",\"stack\":[],\"steps\":13}"
+    },
+    {
+      "file": "hello_ref_vm.json",
+      "bytes": 117,
+      "sha256": "51016a466b0b018b93a17aff28548fa2a29bbbbd12794ad803a376a71b33d06c"
+    }
+  ]
+}

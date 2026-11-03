@@ -1,0 +1,17 @@
+{
+  "deadline_ms": 5000,
+  "envelope_id": "75e5fdadc3721f8b6792881ec7e13d96",
+  "envelope_version": "1",
+  "idempotency_key": "75e5fdadc3721f8b6792881ec7e13d96",
+  "max_attempts": 3,
+  "payload": {
+    "bytes_b64": "QUxQUEIxAHjadVFBasMwEPyLzk6QZEt2AjmEkp5aaA49lWLW0ioWsexgy6Yl5O9dp7RNCxViF4bZmdXozKqxtQ2WE/aD71q2ZoIlzNRojsMYygCtdzhEtj4zaA5d72MdiDTUIJW+YRKGWuDKOCeVRaxWRQrCgFspZ6rcicpqVaBKuct4ofOqgqIQOZc641ZK5/Ts63yDpATWLqE5sUvCamyabnZ3CHHscWDrFzaFxRDBHBfTPGQxYh9864foDXtN2KnvYme6hpS2D0/EiNAfMF5He3SLKcysnxfzpZitQmdHSqLSGWH757f94363/Tx7uob67p7K3farbDcb9j3XQrjdPWGDP7TXncsjvpe1bylFWnYq6wBmSdgvzn9Jz+TFd9x/AroRIDSzeV6A4lSQ54KCzqwTkOkMBFe2QKkgVzl3qOlfuDRVoZ3EVFoueMpX7HL5AHkhplc=",
+    "content_hash": "sha256:125ef8d31a6363f5e50494ce03db79e80cf7faf018b65fef9a32b2121cce6eaf",
+    "encoding": "base64",
+    "kind": "bundle"
+  },
+  "protocol": "ALP",
+  "protocol_version": "0.2",
+  "sequence": 0,
+  "stream_id": "demo"
+}

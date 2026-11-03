@@ -116,7 +116,10 @@ class OperandWidthTests(unittest.TestCase):
         # Previously a trap: PUSH_CONST 200 sign-extends to -56, and
         # PRINT_CHAR rejected anything outside 0..255.
         result = run([Instruction(PUSH, 200, 0, 0), Instruction(PRINT, 0, 0, 0), Instruction(HALT, 0, 0, 0)])
-        self.assertEqual(result.output, chr(200))
+        # One byte, not one code point. Asserting chr(200) here is what
+        # made the suite encode the text interpretation as normative (F7).
+        self.assertEqual(result.output, bytes([200]))
+        self.assertEqual(len(result.output), 1)
 
     def test_print_char_emits_low_eight_bits(self) -> None:
         prog = [
@@ -126,7 +129,7 @@ class OperandWidthTests(unittest.TestCase):
             Instruction(PRINT, 0, 0, 0),
             Instruction(HALT, 0, 0, 0),
         ]
-        self.assertEqual(run(prog).output, chr(0x10))
+        self.assertEqual(run(prog).output, bytes([0x10]))
 
     def test_every_byte_is_reachable(self) -> None:
         for operand in range(256):
@@ -136,7 +139,8 @@ class OperandWidthTests(unittest.TestCase):
                     Instruction(PRINT, 0, 0, 0),
                     Instruction(HALT, 0, 0, 0),
                 ])
-                self.assertEqual(ord(result.output), operand)
+                self.assertEqual(result.output, bytes([operand]))
+                self.assertEqual(len(result.output), 1)
 
 
 class DeterminismAcrossImplementationsTests(unittest.TestCase):

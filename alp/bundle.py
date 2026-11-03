@@ -22,7 +22,7 @@ class BundleError(ValueError):
 
 @dataclass(frozen=True)
 class BundleResult:
-    output: str
+    output: bytes
     top: int | None
     steps: int
     verified_checksum: bool

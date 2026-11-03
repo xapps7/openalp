@@ -62,7 +62,7 @@ class BundleTests(unittest.TestCase):
                 rc = main(["bundle", "run", "--bundle", str(b), "--key", str(k)])
             self.assertEqual(rc, 0)
             payload = json.loads(buf.getvalue())
-            self.assertEqual(payload["output"], "OK")
+            self.assertEqual(payload["output_hex"], b"OK".hex())
             self.assertTrue(payload["verified_checksum"])
             self.assertTrue(payload["verified_signature"])
             self.assertTrue(payload["compatible"])
@@ -117,7 +117,7 @@ class BundleTests(unittest.TestCase):
                 rc = main(["bundle", "run", "--bundle", str(b), "--key", str(k)])
             self.assertEqual(rc, 0)
             payload = json.loads(buf.getvalue())
-            self.assertEqual(payload["output"], "HI")
+            self.assertEqual(payload["output_hex"], b"HI".hex())
 
 
 if __name__ == "__main__":

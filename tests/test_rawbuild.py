@@ -30,7 +30,7 @@ entry=0
             build_alpb_file(src, out)
             module = parse_module(out.read_bytes())
             result = run_module(module, PROFILE)
-            self.assertEqual(result.output, "Hi")
+            self.assertEqual(result.output, b"Hi")
 
 
 if __name__ == "__main__":

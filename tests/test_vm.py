@@ -49,7 +49,7 @@ class VMTests(unittest.TestCase):
             ]
         )
         result = run_module(module, PROFILE)
-        self.assertEqual(result.output, "Hi")
+        self.assertEqual(result.output, b"Hi")
 
 
 if __name__ == "__main__":

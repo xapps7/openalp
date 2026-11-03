@@ -224,7 +224,7 @@
         "phase": "phase-1-specification",
         "order": 3,
         "title": "CANONICAL_ENCODING.md",
-        "state": "open",
+        "state": "done",
         "pillar": "deterministic machine representation",
         "why": "One canonical byte representation and one set of serialization rules. Resolves F7. Without this, two implementations can agree on the computation and still disagree on the hash.",
         "acceptance": [
@@ -237,7 +237,16 @@
           "D1-numeric-model",
           "D2-closed-computations"
         ],
-        "inherits": "D1 output-as-bytes clause (F7). Note the current tests in test_numeric.py assert the text behaviour, so the suite encodes the wrong rule \u2014 runtime and assertions both change."
+        "inherits": "D1 output-as-bytes clause (F7). Note the current tests in test_numeric.py assert the text behaviour, so the suite encodes the wrong rule \u2014 runtime and assertions both change.",
+        "completed": "2026-11-03",
+        "notes": [
+          "docs/CANONICAL_ENCODING.md v0.3: canonical JSON, module bytes, profile, result and preimage.",
+          "F7 implemented: VMResult.output is bytes; PRINT_CHAR appends one byte; results encode output as lowercase hex, never text.",
+          "The tests that asserted the wrong rule were rewritten, not just the runtime \u2014 test_numeric.py had made output-as-text normative.",
+          "Traps now carry the steps, stack and output built before them, so a failing execution has a canonical result. That was the second known deviation in the semantics doc.",
+          "alp/canonical.py adds require_canonical_module (round-trip equality, rejects rather than normalizes) and canonical_preimage, which p1-result-hash hashes directly.",
+          "New corpus tests/fixtures/v0.3.0/ records the exact canonical JSON per artifact. v0.2.0 kept byte-identical with digests still checked; its text-output results are superseded, not corrected in place."
+        ]
       },
       {
         "id": "p1-result-hash",
@@ -257,7 +266,7 @@
           "D1-numeric-model",
           "D2-closed-computations"
         ],
-        "inherits": "A trap's canonical result. Traps currently discard output and stack, so a failing execution cannot yet be hashed."
+        "inherits": "canonical_preimage() in alp/canonical.py is the form to hash. Trap results are now encodable, so this is no longer blocked."
       },
       {
         "id": "p1-golden-vectors",
@@ -594,7 +603,7 @@
         "observed": "Output accumulates Python str characters via chr(), producing code points rather than bytes.",
         "consequence": "Canonical output is ambiguous between a byte string and a text string with an encoding. Hashes computed over it would differ by implementation language.",
         "recommended_resolution": "Output is a byte string. Canonical encoding is the raw bytes; any text interpretation is out of scope.",
-        "status": "open \u2014 spec rule written (section 5), implementation and tests still wrong"
+        "status": "implemented + enforced 2026-11-03; specified in CANONICAL_ENCODING.md section 4.1"
       },
       {
         "id": "F8",

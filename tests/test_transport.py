@@ -30,7 +30,7 @@ PAYLOAD = b"deterministic-payload"
 
 def ok_executor(result: ExecutionResult | None = None):
     """Executor that always succeeds."""
-    value = result or ExecutionResult(output="", top=42, steps=3)
+    value = result or ExecutionResult(output=b"", top=42, steps=3)
 
     def _execute(raw: bytes, envelope: object) -> ExecutionResult:
         return value
@@ -46,7 +46,7 @@ def counting_executor(fail_times: int, error: TransportError):
         calls["n"] += 1
         if calls["n"] <= fail_times:
             raise error
-        return ExecutionResult(output="", top=7, steps=1)
+        return ExecutionResult(output=b"", top=7, steps=1)
 
     return _execute, calls
 
@@ -282,7 +282,7 @@ class OrderingTests(unittest.TestCase):
 
         def execute(raw: bytes, env) -> ExecutionResult:
             order.append(env.sequence)
-            return ExecutionResult(output="", top=0, steps=1)
+            return ExecutionResult(output=b"", top=0, steps=1)
 
         transport = LocalTransport(executor=execute)
         self.assertEqual(transport.send(envelope(0)).status, st.SUCCEEDED)
@@ -303,7 +303,7 @@ class OrderingTests(unittest.TestCase):
 
         def execute(raw: bytes, env) -> ExecutionResult:
             order.append(env.sequence)
-            return ExecutionResult(output="", top=0, steps=1)
+            return ExecutionResult(output=b"", top=0, steps=1)
 
         transport = LocalTransport(executor=execute)
         transport.send(envelope(0))

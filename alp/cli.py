@@ -109,7 +109,7 @@ def cmd_run(args: argparse.Namespace) -> int:
         "steps": result.steps,
         "stack": result.stack,
         "top": result.top,
-        "output": result.output,
+        "output_hex": result.output.hex(),
         "profile": profile.to_dict(),
     }
     if args.trace:
@@ -323,7 +323,7 @@ def cmd_bundle_run(args: argparse.Namespace) -> int:
     print(
         json.dumps(
             {
-                "output": result.output,
+                "output_hex": result.output.hex(),
                 "top": result.top,
                 "steps": result.steps,
                 "verified_checksum": result.verified_checksum,

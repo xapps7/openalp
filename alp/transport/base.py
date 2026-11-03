@@ -16,12 +16,13 @@ from .envelope import Envelope
 
 @dataclass(frozen=True)
 class ExecutionResult:
-    output: str
+    output: bytes
     top: int | None
     steps: int
 
     def to_dict(self) -> dict[str, object]:
-        return {"output": self.output, "top": self.top, "steps": self.steps}
+        # output is bytes and carries no encoding, so it is hex here, never text.
+        return {"output_hex": self.output.hex(), "top": self.top, "steps": self.steps}
 
 
 @dataclass(frozen=True)

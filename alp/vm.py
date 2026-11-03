@@ -18,8 +18,24 @@ class VMTrap(VMError):
     failed the same way. See decision D1-numeric-model in docs/status.json.
     """
 
-    def __init__(self, code: str, detail: str = "") -> None:
+    def __init__(
+        self,
+        code: str,
+        detail: str = "",
+        steps: int = 0,
+        stack: tuple[int, ...] = (),
+        output: bytes = b"",
+        profile: "ExecutionProfile | None" = None,
+    ) -> None:
         self.code = code
+        self.detail = detail
+        # State at the moment of the trap. A trap is an outcome with a
+        # result, so the partial state must survive rather than be
+        # discarded with the exception (canonical encoding needs it).
+        self.steps = steps
+        self.stack = stack
+        self.output = output
+        self.profile = profile
         super().__init__(f"{code}: {detail}" if detail else code)
 
 
@@ -73,7 +89,7 @@ class VMResult:
     halted: bool
     steps: int
     stack: list[int]
-    output: str
+    output: bytes
     profile: ExecutionProfile | None = None
     trace: list[str] | None = None
 
@@ -99,13 +115,13 @@ def run_module(module: Module, profile: ExecutionProfile, trace: bool = False) -
     steps = 0
     stack: list[int] = []
     halted = False
-    output_chars: list[str] = []
+    output_bytes = bytearray()
     instrs = module.instructions
     trace_lines: list[str] | None = [] if trace else None
 
     while steps < max_steps:
         if ip >= len(instrs):
-            raise VMTrap("trap.ip_out_of_range", f"ip={ip}")
+            raise VMTrap("trap.ip_out_of_range", f"ip={ip}", steps, tuple(stack), bytes(output_bytes), profile)
 
         curr_ip = ip
         inst = instrs[ip]
@@ -136,7 +152,11 @@ def run_module(module: Module, profile: ExecutionProfile, trace: bool = False) -
             _require_stack(stack, 2, "DIV")
             rhs = stack.pop()
             lhs = stack.pop()
-            stack.append(wrap_i64(div_i64(lhs, rhs)))
+            try:
+                quotient = div_i64(lhs, rhs)
+            except VMTrap as trap:
+                raise VMTrap(trap.code, trap.detail, steps, tuple(stack), bytes(output_bytes), profile) from None
+            stack.append(wrap_i64(quotient))
         elif op == 0x06:  # JMP
             ip = inst.a
         elif op == 0x07:  # JZ
@@ -158,9 +178,9 @@ def run_module(module: Module, profile: ExecutionProfile, trace: bool = False) -
             # D1: total over the whole i64 range. Emits the low 8 bits, so
             # bytes 128-255 are reachable, which they were not while
             # PUSH_CONST sign-extended and PRINT_CHAR demanded 0..255 (F3).
-            output_chars.append(chr(value & 0xFF))
+            output_bytes.append(value & 0xFF)
         else:
-            raise VMTrap("trap.invalid_opcode", f"opcode={op:#04x}")
+            raise VMTrap("trap.invalid_opcode", f"opcode={op:#04x}", steps, tuple(stack), bytes(output_bytes), profile)
 
         if trace_lines is not None:
             trace_lines.append(f"step={steps} ip={curr_ip} op={op:#04x} stack={stack}")
@@ -169,13 +189,13 @@ def run_module(module: Module, profile: ExecutionProfile, trace: bool = False) -
             break
 
     if not halted and steps >= max_steps:
-        raise VMTrap("trap.step_budget_exceeded", f"step_budget={max_steps}")
+        raise VMTrap("trap.step_budget_exceeded", f"step_budget={max_steps}", steps, tuple(stack), bytes(output_bytes), profile)
 
     return VMResult(
         halted=halted,
         steps=steps,
         stack=stack,
-        output="".join(output_chars),
+        output=bytes(output_bytes),
         profile=profile,
         trace=trace_lines,
     )
@@ -183,4 +203,4 @@ def run_module(module: Module, profile: ExecutionProfile, trace: bool = False) -
 
 def _require_stack(stack: list[int], n: int, op: str) -> None:
     if len(stack) < n:
-        raise VMTrap("trap.stack_underflow", f"{op} needs {n}, have {len(stack)}")
+        raise VMTrap("trap.stack_underflow", f"{op} needs {n}, have {len(stack)}", stack=tuple(stack))

@@ -29,13 +29,23 @@ from alp.handshake import compatibility, parse_hello
 from alp.transport import LocalTransport, make_bundle_executor, parse_envelope
 from alp.transport import status as st
 from alp.profile import ExecutionProfile
+from alp.canonical import canonical_result, require_canonical_module
 from alp.vm import run_module
 
 PROFILE = ExecutionProfile.default()
 
-CORPUS = Path(__file__).parent / "fixtures" / "v0.2.0"
+CORPUS = Path(__file__).parent / "fixtures" / "v0.3.0"
 MANIFEST = json.loads((CORPUS / "conformance.json").read_text())
 ARTIFACTS = {entry["file"]: entry for entry in MANIFEST["artifacts"]}
+
+# v0.2.0 stays in the tree, byte-identical. Its recorded execution results
+# used output-as-text, which section 5 of the semantics says is wrong, so
+# they are superseded rather than corrected in place. Its artifact digests
+# are still checked: those are file hashes and do not depend on how a
+# result is written down.
+LEGACY_CORPUS = Path(__file__).parent / "fixtures" / "v0.2.0"
+LEGACY_MANIFEST = json.loads((LEGACY_CORPUS / "conformance.json").read_text())
+LEGACY_ARTIFACTS = {entry["file"]: entry for entry in LEGACY_MANIFEST["artifacts"]}
 
 
 class CorpusIntegrityTests(unittest.TestCase):
@@ -57,6 +67,31 @@ class CorpusIntegrityTests(unittest.TestCase):
         self.assertGreaterEqual(len(ARTIFACTS), 8)
 
 
+class LegacyCorpusTests(unittest.TestCase):
+    """v0.2.0 must stay byte-identical even though its result format is superseded."""
+
+    def test_legacy_artifacts_still_match_their_digests(self) -> None:
+        for name, entry in LEGACY_ARTIFACTS.items():
+            with self.subTest(artifact=name):
+                raw = (LEGACY_CORPUS / name).read_bytes()
+                self.assertEqual(hashlib.sha256(raw).hexdigest(), entry["sha256"])
+
+    def test_both_corpora_hold_the_same_artifact_bytes(self) -> None:
+        # The migration changed how results are recorded, not the artifacts.
+        shared = set(ARTIFACTS) & set(LEGACY_ARTIFACTS)
+        self.assertGreaterEqual(len(shared), 8)
+        for name in sorted(shared):
+            with self.subTest(artifact=name):
+                self.assertEqual(
+                    (CORPUS / name).read_bytes(),
+                    (LEGACY_CORPUS / name).read_bytes(),
+                )
+
+    def test_migration_is_documented(self) -> None:
+        self.assertEqual(MANIFEST["supersedes"], "v0.2.0")
+        self.assertTrue(MANIFEST["migration_from_v0.2.0"])
+
+
 class FrozenModuleTests(unittest.TestCase):
     """Frozen modules must still parse and execute identically."""
 
@@ -75,13 +110,28 @@ class FrozenModuleTests(unittest.TestCase):
         for name, entry in self._modules():
             with self.subTest(module=name):
                 module = parse_module((CORPUS / name).read_bytes())
-                result = run_module(module, PROFILE)
-                expected = entry["execution"]
-                self.assertEqual(result.halted, expected["halted"])
-                self.assertEqual(result.steps, expected["steps"])
-                self.assertEqual(result.top, expected["top"])
-                self.assertEqual(list(result.stack), expected["stack"])
-                self.assertEqual(result.output, expected["output"])
+                result = canonical_result(run_module(module, PROFILE))
+                self.assertEqual(result.to_dict(), entry["canonical_result"])
+
+    def test_frozen_modules_serialise_to_recorded_bytes(self) -> None:
+        # Compare the canonical JSON string itself, not just the fields. A
+        # second implementation has to match the serialization, not only
+        # agree about the values.
+        for name, entry in self._modules():
+            with self.subTest(module=name):
+                module = parse_module((CORPUS / name).read_bytes())
+                result = canonical_result(run_module(module, PROFILE))
+                self.assertEqual(result.canonical_json(), entry["canonical_result_json"])
+
+    def test_recorded_profile_is_the_one_used(self) -> None:
+        # A result without its profile is not comparable, so the corpus
+        # records the profile and the tests must run under it.
+        self.assertEqual(MANIFEST["profile"], PROFILE.to_dict())
+
+    def test_modules_in_the_corpus_are_canonically_encoded(self) -> None:
+        for name, _ in self._modules():
+            with self.subTest(module=name):
+                require_canonical_module((CORPUS / name).read_bytes())
 
     def test_module_format_version_has_not_moved(self) -> None:
         from alp.format import VERSION

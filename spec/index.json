@@ -38,6 +38,12 @@
       "kind": "execution-semantics",
       "status": "active",
       "supersedes": "runtime-semantics-v0.2"
+    },
+    {
+      "id": "canonical-encoding-v0.3",
+      "path": "docs/CANONICAL_ENCODING.md",
+      "kind": "canonical-encoding",
+      "status": "active"
     }
   ]
 }

@@ -42,7 +42,7 @@ class CLITests(unittest.TestCase):
             payload = json.loads(buf.getvalue())
             self.assertEqual(payload["top"], 9)
             self.assertEqual(len(payload["trace"]), 2)
-            self.assertEqual(payload["output"], "")
+            self.assertEqual(payload["output_hex"], "")
 
     def test_handshake_validate(self) -> None:
         with tempfile.TemporaryDirectory() as td:

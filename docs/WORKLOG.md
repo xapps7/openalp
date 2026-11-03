@@ -171,6 +171,20 @@
   - split `decided` / `specified` / `implemented` / `enforced` in `status.json`; F4 had been reading as done since August while the code ignored it
   - 66 days of no commits diagnosed: the build agent never had folder access and never worked
 
+### Block 2
+
+- Duration: `2.5h`
+- Focus: `p1-canonical-encoding` — the second phase-1 deliverable
+- Output:
+  - `VMResult.output` is now `bytes`; `PRINT_CHAR` appends one byte (F7)
+  - rewrote the assertions in `test_numeric.py` that had made output-as-text normative
+  - `VMTrap` carries the steps, stack and output built before it, so a trap has a result
+  - added `alp/canonical.py`: canonical JSON, `require_canonical_module`, `canonical_result`, `canonical_preimage`
+  - wrote [CANONICAL_ENCODING.md](docs/CANONICAL_ENCODING.md) v0.3
+  - new corpus `tests/fixtures/v0.3.0/` recording exact canonical JSON; v0.2.0 kept byte-identical and superseded, not re-frozen
+  - added `tests/test_canonical.py` (21 cases) incl. injectivity and totality; suite `129` -> `156`
+  - all eight determinism findings now closed
+
 ### Total
 
-- `2.0h`
+- `4.5h`
