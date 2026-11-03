@@ -6,7 +6,10 @@ from pathlib import Path
 
 from alp.format import parse_module
 from alp.rawbuild import build_alpb_file
+from alp.profile import ExecutionProfile
 from alp.vm import run_module
+
+PROFILE = ExecutionProfile.default()
 
 
 class RawBuildTests(unittest.TestCase):
@@ -26,7 +29,7 @@ entry=0
 
             build_alpb_file(src, out)
             module = parse_module(out.read_bytes())
-            result = run_module(module)
+            result = run_module(module, PROFILE)
             self.assertEqual(result.output, "Hi")
 
 

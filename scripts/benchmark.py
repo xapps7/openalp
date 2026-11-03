@@ -4,14 +4,18 @@ import time
 from pathlib import Path
 
 from alp.format import parse_module
+from alp.profile import ExecutionProfile
 from alp.vm import run_module
+
+
+_PROFILE = ExecutionProfile.default()
 
 
 def bench(path: Path, iterations: int) -> float:
     module = parse_module(path.read_bytes())
     start = time.perf_counter()
     for _ in range(iterations):
-        run_module(module)
+        run_module(module, _PROFILE)
     end = time.perf_counter()
     return end - start
 

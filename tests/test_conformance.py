@@ -28,7 +28,10 @@ from alp.format import parse_module
 from alp.handshake import compatibility, parse_hello
 from alp.transport import LocalTransport, make_bundle_executor, parse_envelope
 from alp.transport import status as st
+from alp.profile import ExecutionProfile
 from alp.vm import run_module
+
+PROFILE = ExecutionProfile.default()
 
 CORPUS = Path(__file__).parent / "fixtures" / "v0.2.0"
 MANIFEST = json.loads((CORPUS / "conformance.json").read_text())
@@ -72,7 +75,7 @@ class FrozenModuleTests(unittest.TestCase):
         for name, entry in self._modules():
             with self.subTest(module=name):
                 module = parse_module((CORPUS / name).read_bytes())
-                result = run_module(module, max_steps=100_000)
+                result = run_module(module, PROFILE)
                 expected = entry["execution"]
                 self.assertEqual(result.halted, expected["halted"])
                 self.assertEqual(result.steps, expected["steps"])
@@ -97,18 +100,18 @@ class FrozenBundleTests(unittest.TestCase):
     KEY = Path(__file__).parent.parent / "samples" / "dev_hmac.key"
 
     def test_frozen_json_bundle_still_runs(self) -> None:
-        result = run_bundle(CORPUS / "add.alpp.json", self.KEY)
+        result = run_bundle(CORPUS / "add.alpp.json", self.KEY, PROFILE)
         self.assertEqual(result.top, 12)
         self.assertTrue(result.verified_checksum)
         self.assertTrue(result.verified_signature)
 
     def test_frozen_binary_bundle_still_runs(self) -> None:
-        result = run_bundle(CORPUS / "add.alppb", self.KEY)
+        result = run_bundle(CORPUS / "add.alppb", self.KEY, PROFILE)
         self.assertEqual(result.top, 12)
 
     def test_both_bundle_encodings_agree(self) -> None:
-        a = run_bundle(CORPUS / "add.alpp.json", self.KEY)
-        b = run_bundle(CORPUS / "add.alppb", self.KEY)
+        a = run_bundle(CORPUS / "add.alpp.json", self.KEY, PROFILE)
+        b = run_bundle(CORPUS / "add.alppb", self.KEY, PROFILE)
         self.assertEqual((a.top, a.steps, a.output), (b.top, b.steps, b.output))
 
 
@@ -135,7 +138,7 @@ class FrozenProtocolTests(unittest.TestCase):
 
     def test_frozen_envelope_still_delivers(self) -> None:
         envelope = parse_envelope(json.loads((CORPUS / "add.alpe.json").read_text()))
-        transport = LocalTransport(executor=make_bundle_executor(FrozenBundleTests.KEY))
+        transport = LocalTransport(executor=make_bundle_executor(FrozenBundleTests.KEY, PROFILE))
         receipt = transport.send(envelope)
         self.assertEqual(receipt.status, st.SUCCEEDED)
         self.assertEqual(receipt.result.top, 12)

@@ -9,6 +9,7 @@ import unittest
 from pathlib import Path
 
 from alp.cli import main
+from alp.profile import ExecutionProfile
 from alp.transport import status as st
 from alp.transport import (
     EnvelopeError,
@@ -474,7 +475,7 @@ class BundleExecutorTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             key = Path(td) / "k.key"
             key.write_text("secret-key")
-            transport = LocalTransport(executor=make_bundle_executor(key))
+            transport = LocalTransport(executor=make_bundle_executor(key, ExecutionProfile.default()))
             env = build_envelope(b'{"not":"a bundle"}', "s", 0, kind="bundle", max_attempts=3)
             receipt = transport.send(env)
             self.assertEqual(receipt.status, st.FAILED)

@@ -14,15 +14,16 @@ Each test below fails if a future change reintroduces one of those.
 import unittest
 
 from alp.format import Instruction, Module, VERSION
+from alp.profile import ExecutionProfile
 from alp.vm import INT64_MAX, INT64_MIN, VMTrap, div_i64, run_module, wrap_i64
 
 PUSH, ADD, SUB, MUL, DIV = 0x01, 0x02, 0x03, 0x04, 0x05
 DUP, POP, PRINT, HALT = 0x09, 0x0A, 0x0B, 0x08
 
 
-def run(instrs, max_steps: int = 10_000):
+def run(instrs, step_budget: int = 10_000):
     module = Module(version=VERSION, flags=0, entry=0, instructions=tuple(instrs))
-    return run_module(module, max_steps=max_steps)
+    return run_module(module, ExecutionProfile(step_budget=step_budget))
 
 
 class WrappingTests(unittest.TestCase):

@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .format import ALPFormatError, parse_module
+from .profile import ExecutionProfile
 from .handshake import HandshakeError, compatibility, parse_hello
 from .integrity import verify_manifest, verify_signature_manifest
 from .protocol import validate_protocol_version, ProtocolError
@@ -82,7 +83,7 @@ def create_bundle(
     _write_bundle_payload(payload, out_path, binary=binary)
 
 
-def run_bundle(bundle_path: Path, signature_key_path: Path, max_steps: int = 100_000) -> BundleResult:
+def run_bundle(bundle_path: Path, signature_key_path: Path, profile: ExecutionProfile) -> BundleResult:
     bundle = _read_bundle_payload(bundle_path)
     protocol = bundle.get("protocol", "ALP")
     protocol_version = bundle.get("protocol_version", bundle.get("hello", {}).get("version", "0.1"))
@@ -133,7 +134,7 @@ def run_bundle(bundle_path: Path, signature_key_path: Path, max_steps: int = 100
         if not hs.get("compatible"):
             raise BundleError(f"handshake incompatible: {hs.get('reason', 'unknown')}" )
 
-        vm = run_module(module, max_steps=max_steps)
+        vm = run_module(module, profile)
 
     return BundleResult(
         output=vm.output,

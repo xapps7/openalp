@@ -21,6 +21,7 @@ from typing import Callable
 from ..bundle import BundleError, run_bundle
 from ..format import ALPFormatError, parse_module
 from ..protocol import ProtocolError
+from ..profile import ExecutionProfile
 from ..vm import VMError, run_module
 from . import status as st
 from .base import ExecutionResult, Receipt, Transport, TransportError
@@ -79,20 +80,20 @@ def _classify(exc: Exception) -> TransportError:
     return TransportError(st.PERMANENT, str(exc))
 
 
-def make_bundle_executor(key_path: Path, max_steps: int = 100_000) -> Executor:
+def make_bundle_executor(key_path: Path, profile: ExecutionProfile) -> Executor:
     """Executor that runs a bundle payload through the verified bundle path."""
 
     def _execute(raw: bytes, envelope: Envelope) -> ExecutionResult:
         if envelope.payload.kind == "module":
             module = parse_module(raw)
-            vm = run_module(module, max_steps=max_steps)
+            vm = run_module(module, profile)
             return ExecutionResult(output=vm.output, top=vm.top, steps=vm.steps)
 
         with TemporaryDirectory() as td:
             suffix = ".alppb" if raw.startswith(b"ALPPB1\x00") else ".alpp.json"
             bundle_path = Path(td) / f"envelope{suffix}"
             bundle_path.write_bytes(raw)
-            result = run_bundle(bundle_path, key_path, max_steps=max_steps)
+            result = run_bundle(bundle_path, key_path, profile)
         return ExecutionResult(output=result.output, top=result.top, steps=result.steps)
 
     return _execute
@@ -274,12 +275,14 @@ class LocalTransport(Transport):
 def send_envelope_file(
     envelope_path: Path,
     key_path: Path,
-    max_steps: int = 100_000,
+    profile: ExecutionProfile | None = None,
     transport: LocalTransport | None = None,
 ) -> Receipt:
     """Convenience path used by the CLI: parse an envelope file and send it."""
     from .envelope import parse_envelope
 
     envelope = parse_envelope(json.loads(envelope_path.read_text()))
-    active = transport or LocalTransport(executor=make_bundle_executor(key_path, max_steps=max_steps))
+    active = transport or LocalTransport(
+        executor=make_bundle_executor(key_path, profile or ExecutionProfile.default())
+    )
     return active.send(envelope)

@@ -22,6 +22,7 @@ from .integrity import (
     write_signature_manifest,
 )
 from .opcodes import opname
+from .profile import ExecutionProfile, ProfileError, load_profile
 from .protocol import ProtocolError, RuntimeProfile, validate_runtime_compatibility
 from .rawbuild import RawBuildError, build_alpb_file
 from .transport import (
@@ -37,6 +38,34 @@ from .vm import VMError, run_module
 
 def _read(path: pathlib.Path) -> bytes:
     return path.read_bytes()
+
+
+def _resolve_profile(args: argparse.Namespace) -> ExecutionProfile:
+    """Pick the execution profile for this invocation.
+
+    A host may select a profile; it may not execute without one. Whichever
+    profile is used is echoed in the command output, so the step budget is
+    always recorded alongside the result it produced (D2 / finding F4).
+    """
+    path = getattr(args, "profile", None)
+    if path:
+        return load_profile(pathlib.Path(path))
+    budget = getattr(args, "step_budget", None)
+    if budget is not None:
+        return ExecutionProfile(step_budget=budget)
+    return ExecutionProfile.default()
+
+
+def _add_profile_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--profile", default=None, help="execution profile JSON (see samples/profile.default.json)")
+    parser.add_argument(
+        "--step-budget",
+        "--max-steps",
+        dest="step_budget",
+        type=int,
+        default=None,
+        help="step budget for an ad-hoc profile; --profile takes precedence",
+    )
 
 
 def cmd_validate(args: argparse.Namespace) -> int:
@@ -68,13 +97,21 @@ def cmd_inspect(args: argparse.Namespace) -> int:
 def cmd_run(args: argparse.Namespace) -> int:
     path = pathlib.Path(args.path)
     try:
+        profile = _resolve_profile(args)
         module = parse_module(_read(path))
-        result = run_module(module, max_steps=args.max_steps, trace=args.trace)
-    except (OSError, ALPFormatError, VMError) as exc:
+        result = run_module(module, profile, trace=args.trace)
+    except (OSError, ALPFormatError, VMError, ProfileError) as exc:
         print(f"ERROR: {exc}")
         return 1
 
-    payload = {"halted": result.halted, "steps": result.steps, "stack": result.stack, "top": result.top, "output": result.output}
+    payload = {
+        "halted": result.halted,
+        "steps": result.steps,
+        "stack": result.stack,
+        "top": result.top,
+        "output": result.output,
+        "profile": profile.to_dict(),
+    }
     if args.trace:
         trace = result.trace or []
         if args.trace_limit is not None:
@@ -221,8 +258,9 @@ def cmd_sign_rsa_verify(args: argparse.Namespace) -> int:
 def cmd_determinism_report(args: argparse.Namespace) -> int:
     path = pathlib.Path(args.path)
     try:
+        profile = _resolve_profile(args)
         module = parse_module(_read(path))
-    except (OSError, ALPFormatError) as exc:
+    except (OSError, ALPFormatError, ProfileError) as exc:
         print(f"ERROR: {exc}")
         return 1
 
@@ -231,7 +269,7 @@ def cmd_determinism_report(args: argparse.Namespace) -> int:
     steps: list[int] = []
     for _ in range(args.runs):
         try:
-            result = run_module(module, max_steps=args.max_steps, trace=False)
+            result = run_module(module, profile, trace=False)
         except VMError as exc:
             print(f"ERROR: {exc}")
             return 1
@@ -241,7 +279,7 @@ def cmd_determinism_report(args: argparse.Namespace) -> int:
         steps.append(result.steps)
 
     consistent = len(set(hashes)) == 1
-    print(json.dumps({"runs": args.runs, "consistent": consistent, "output_hash": hashes[0] if hashes else None, "top_values": tops, "steps": steps}))
+    print(json.dumps({"runs": args.runs, "consistent": consistent, "output_hash": hashes[0] if hashes else None, "top_values": tops, "steps": steps, "profile": profile.to_dict()}))
     return 0 if consistent else 1
 
 
@@ -277,7 +315,8 @@ def cmd_bundle_create(args: argparse.Namespace) -> int:
 
 def cmd_bundle_run(args: argparse.Namespace) -> int:
     try:
-        result = run_bundle(pathlib.Path(args.bundle), pathlib.Path(args.key), max_steps=args.max_steps)
+        profile = _resolve_profile(args)
+        result = run_bundle(pathlib.Path(args.bundle), pathlib.Path(args.key), profile)
     except (OSError, json.JSONDecodeError, BundleError, ValueError) as exc:
         print(f"ERROR: {exc}")
         return 1
@@ -290,6 +329,7 @@ def cmd_bundle_run(args: argparse.Namespace) -> int:
                 "verified_checksum": result.verified_checksum,
                 "verified_signature": result.verified_signature,
                 "compatible": result.compatible,
+                "profile": profile.to_dict(),
             }
         )
     )
@@ -331,7 +371,7 @@ def cmd_transport_send(args: argparse.Namespace) -> int:
     try:
         envelope = parse_envelope(json.loads(pathlib.Path(args.envelope).read_text()))
         transport = LocalTransport(
-            executor=make_bundle_executor(pathlib.Path(args.key), max_steps=args.max_steps)
+            executor=make_bundle_executor(pathlib.Path(args.key), _resolve_profile(args))
         )
         receipt = transport.send(envelope)
     except (OSError, json.JSONDecodeError, EnvelopeError) as exc:
@@ -351,7 +391,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_run = sub.add_parser("run", help="run an ALP module")
     p_run.add_argument("path")
-    p_run.add_argument("--max-steps", type=int, default=100_000)
+    _add_profile_args(p_run)
     p_run.add_argument("--trace", action="store_true")
     p_run.add_argument("--trace-limit", type=int, default=None)
     p_run.set_defaults(func=cmd_run)
@@ -420,7 +460,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_det_report = p_det_sub.add_parser("report", help="run module repeatedly and compare outputs")
     p_det_report.add_argument("path")
     p_det_report.add_argument("--runs", type=int, default=5)
-    p_det_report.add_argument("--max-steps", type=int, default=100_000)
+    _add_profile_args(p_det_report)
     p_det_report.set_defaults(func=cmd_determinism_report)
 
     p_build_raw = sub.add_parser("build-raw", help="build .alp from numeric .alpb source")
@@ -444,7 +484,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_bundle_run = p_bundle_sub.add_parser("run", help="verify and run an ALP bundle")
     p_bundle_run.add_argument("--bundle", required=True)
     p_bundle_run.add_argument("--key", required=True)
-    p_bundle_run.add_argument("--max-steps", type=int, default=100_000)
+    _add_profile_args(p_bundle_run)
     p_bundle_run.set_defaults(func=cmd_bundle_run)
 
     p_transport = sub.add_parser("transport", help="transport envelope and delivery tools")
@@ -472,7 +512,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_transport_send = p_transport_sub.add_parser("send", help="deliver an envelope through the local reference transport")
     p_transport_send.add_argument("--envelope", required=True)
     p_transport_send.add_argument("--key", required=True)
-    p_transport_send.add_argument("--max-steps", type=int, default=100_000)
+    _add_profile_args(p_transport_send)
     p_transport_send.set_defaults(func=cmd_transport_send)
 
     return parser

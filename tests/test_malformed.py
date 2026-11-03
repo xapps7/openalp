@@ -8,6 +8,7 @@ import zlib
 from pathlib import Path
 
 from alp.bundle import BundleError, run_bundle
+from alp.profile import ExecutionProfile
 from alp.format import ALPFormatError, Instruction, Module, VERSION, encode_module, parse_module
 from alp.handshake import HandshakeError, parse_hello
 from alp.integrity import verify_manifest, verify_signature_manifest
@@ -101,7 +102,7 @@ class MalformedBundleTests(unittest.TestCase):
             bundle.write_bytes(raw)
             key.write_text("secret-key")
             with self.assertRaises(BundleError) as ctx:
-                run_bundle(bundle, key)
+                run_bundle(bundle, key, ExecutionProfile.default())
             return str(ctx.exception)
 
     def test_reject_non_json_bundle(self) -> None:

@@ -3,7 +3,10 @@ from __future__ import annotations
 import unittest
 
 from alp.format import Instruction, Module, VERSION
+from alp.profile import ExecutionProfile
 from alp.vm import VMError, run_module
+
+PROFILE = ExecutionProfile.default()
 
 
 def make_module(instructions: list[Instruction], entry: int = 0) -> Module:
@@ -20,7 +23,7 @@ class VMTests(unittest.TestCase):
                 Instruction(0x08, 0, 0, 0),
             ]
         )
-        result = run_module(module)
+        result = run_module(module, PROFILE)
         self.assertEqual(result.top, 7)
 
     def test_div_zero_fails(self) -> None:
@@ -33,7 +36,7 @@ class VMTests(unittest.TestCase):
             ]
         )
         with self.assertRaises(VMError):
-            run_module(module)
+            run_module(module, PROFILE)
 
     def test_print_char_output(self) -> None:
         module = make_module(
@@ -45,7 +48,7 @@ class VMTests(unittest.TestCase):
                 Instruction(0x08, 0, 0, 0),
             ]
         )
-        result = run_module(module)
+        result = run_module(module, PROFILE)
         self.assertEqual(result.output, "Hi")
 
 

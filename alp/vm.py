@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .format import Module
+from .profile import ExecutionProfile
 
 
 class VMError(RuntimeError):
@@ -20,6 +21,19 @@ class VMTrap(VMError):
     def __init__(self, code: str, detail: str = "") -> None:
         self.code = code
         super().__init__(f"{code}: {detail}" if detail else code)
+
+
+# F5: the closed set of canonical trap codes. A trap is an identified,
+# comparable outcome of execution, not an absence of one. Two conforming
+# implementations must agree on which of these a given execution produces.
+TRAP_CODES = (
+    "trap.stack_underflow",
+    "trap.div_by_zero",
+    "trap.div_overflow",
+    "trap.invalid_opcode",
+    "trap.ip_out_of_range",
+    "trap.step_budget_exceeded",
+)
 
 
 # D1-numeric-model: values are 64-bit two's complement integers.
@@ -60,6 +74,7 @@ class VMResult:
     steps: int
     stack: list[int]
     output: str
+    profile: ExecutionProfile | None = None
     trace: list[str] | None = None
 
     @property
@@ -72,7 +87,14 @@ def _as_i8(value: int) -> int:
     return value - 256 if value > 127 else value
 
 
-def run_module(module: Module, max_steps: int = 100_000, trace: bool = False) -> VMResult:
+def run_module(module: Module, profile: ExecutionProfile, trace: bool = False) -> VMResult:
+    """Execute a module under an explicit profile.
+
+    There is deliberately no budget argument and no default: D2 makes the
+    step budget part of the profile, so every execution records the budget
+    it ran under. See alp/profile.py.
+    """
+    max_steps = profile.step_budget
     ip = module.entry
     steps = 0
     stack: list[int] = []
@@ -83,7 +105,7 @@ def run_module(module: Module, max_steps: int = 100_000, trace: bool = False) ->
 
     while steps < max_steps:
         if ip >= len(instrs):
-            raise VMError(f"instruction pointer out of range: {ip}")
+            raise VMTrap("trap.ip_out_of_range", f"ip={ip}")
 
         curr_ip = ip
         inst = instrs[ip]
@@ -138,7 +160,7 @@ def run_module(module: Module, max_steps: int = 100_000, trace: bool = False) ->
             # PUSH_CONST sign-extended and PRINT_CHAR demanded 0..255 (F3).
             output_chars.append(chr(value & 0xFF))
         else:
-            raise VMError(f"unknown opcode during execution: {op:#04x}")
+            raise VMTrap("trap.invalid_opcode", f"opcode={op:#04x}")
 
         if trace_lines is not None:
             trace_lines.append(f"step={steps} ip={curr_ip} op={op:#04x} stack={stack}")
@@ -147,17 +169,18 @@ def run_module(module: Module, max_steps: int = 100_000, trace: bool = False) ->
             break
 
     if not halted and steps >= max_steps:
-        raise VMError(f"max steps exceeded ({max_steps})")
+        raise VMTrap("trap.step_budget_exceeded", f"step_budget={max_steps}")
 
     return VMResult(
         halted=halted,
         steps=steps,
         stack=stack,
         output="".join(output_chars),
+        profile=profile,
         trace=trace_lines,
     )
 
 
 def _require_stack(stack: list[int], n: int, op: str) -> None:
     if len(stack) < n:
-        raise VMError(f"stack underflow in {op}: need {n}, have {len(stack)}")
+        raise VMTrap("trap.stack_underflow", f"{op} needs {n}, have {len(stack)}")
