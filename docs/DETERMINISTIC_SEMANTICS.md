@@ -126,17 +126,15 @@ Partial conformance is not conformance. An implementation that differs on one or
 
 ## 10. Traceability
 
-Every normative statement must have a test that fails when it is violated. Current coverage:
+Every normative statement must have a test that fails when it is violated. That mapping is **not** maintained here, because a hand-kept table drifts from the tests it claims to describe.
 
-| Section | Tests |
-| --- | --- |
-| §1.4, §1.7, §7.6 | `tests/test_profile.py::ProfileRequiredTests` |
-| §1.8, §1.9 | `tests/test_profile.py::TrapTaxonomyTests`, `tests/test_malformed.py` |
-| §2.3 | `tests/test_vm.py`, `tests/test_numeric.py::DivisionTests` |
-| §3.3 | `tests/test_profile.py::TrapTaxonomyTests::test_stack_underflow` |
-| §4.1–§4.5 | `tests/test_numeric.py::WrappingTests`, `::DivisionTests` |
-| §4.6, §4.7 | `tests/test_numeric.py::OperandWidthTests` |
-| §6.2, §6.3 | `tests/test_profile.py::TrapTaxonomyTests` |
-| §7.5 | `tests/test_profile.py::ProfileValidationTests` |
+It lives in `spec/conformance-map.json`, section by section, and `tests/test_normative_coverage.py` enforces it:
 
-Not yet covered, and therefore not yet enforced: §2.4 output ordering, §3.4 absence of an implementation stack limit, §3.5 full-stack equality, §5 output as bytes, §6.4 detail excluded from hashes, §6.6 cross-implementation agreement, §8.2 unobservable optimisation. These are the work of `p1-conformance-tests`, which must also produce the gap list above automatically rather than by hand.
+1. A normative statement with no entry in the map fails the suite. A new rule must be triaged, not silently unenforced.
+2. A map entry pointing at a test that does not exist fails the suite.
+3. A map entry pointing at a section with no normative statement fails the suite, so the map cannot outlive the prose.
+4. An entry with no tests must carry a reason, and the number of such entries is ratcheted: it may fall and must never rise.
+
+As of 2026-11-03: 28 normative sections mapped, 5 unenforced, each with a stated reason. Those five are §1.2 (instruction stream immutability), §3.4 (absence of an implementation stack limit), §7.7 (older profile versions), §8.2 (unobservable optimisation), and `CANONICAL_ENCODING.md` §2.3 (ignored operand bytes affecting the hash).
+
+Two further entries are marked partial rather than complete, and it is worth being explicit about why. §6.6 requires that two conforming implementations agree; a fresh process and a recorded vector corpus stand in for the second implementation, which is the best a single-implementation suite can do. §7.1 forbids all external interaction; the tests prove paths do not leak in, but nothing proves the absence of clock or entropy access. Both close properly only when a second implementation exists.

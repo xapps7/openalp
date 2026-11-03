@@ -39,9 +39,22 @@
   - updated launch checks
   - ran full local test suite and launch check
 
+### Block 3
+
+- Duration: `2.5h`
+- Focus: `p1-result-hash`, `p1-golden-vectors`, `p1-conformance-tests` — phase 1 closed
+- Output:
+  - `alp/hashing.py`: the invariant stated formally with its quantification, `H(A,P) = sha256(canonical_preimage_json(...))`, plus `alp hash`
+  - a trap hashes like a halt; two runs with identical results but different budgets hash differently, which is the profile earning its place in the preimage
+  - `spec/golden/vectors.json`: 19 vectors at the edges languages disagree on — wraparound, INT64_MIN, all four division sign cases, operand order, budget boundary both sides, all 256 output bytes
+  - `trap.invalid_opcode` found unreachable by a valid artifact (the parser rejects first); recorded as unreachable with the reason rather than quietly missing
+  - `spec/conformance-map.json` + `tests/test_normative_coverage.py`: all 28 normative sections mapped, built as a ratchet so gaps carry reasons and can only fall
+  - the ratchet immediately caught my own rewrite of semantics §10 for containing an unmapped normative token
+  - suite `156` -> `185`; phase 1 complete
+
 ### Total
 
-- `4.5h`
+- `7.0h`
 
 ## 2026-08-27
 

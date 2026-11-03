@@ -28,7 +28,10 @@ test -f "$ROOT/tests/fixtures/v0.2.0/conformance.json"
 test -f "$ROOT/tests/fixtures/v0.3.0/conformance.json"
 test -f "$ROOT/docs/DETERMINISTIC_SEMANTICS.md"
 test -f "$ROOT/docs/CANONICAL_ENCODING.md"
-PYTHONPATH="$ROOT" python3 -m unittest tests.test_canonical tests.test_profile -q
+test -f "$ROOT/spec/golden/vectors.json"
+test -f "$ROOT/spec/conformance-map.json"
+PYTHONPATH="$ROOT" python3 -m unittest tests.test_canonical tests.test_profile tests.test_golden tests.test_hashing tests.test_normative_coverage -q
+PYTHONPATH="$ROOT" python3 -m alp.cli hash "$ROOT/samples/add.alp" >/tmp/openalp-hash.out
 PYTHONPATH="$ROOT" python3 -m unittest tests.test_conformance -q
 test -f "$ROOT/docs/status.json"
 PYTHONPATH="$ROOT" python3 -c "import json,sys; d=json.load(open('$ROOT/docs/status.json')); sys.exit(0 if d.get('week',{}).get('tasks') else 1)"

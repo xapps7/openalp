@@ -1,0 +1,176 @@
+{
+  "map_version": "1",
+  "as_of": "2026-11-03",
+  "purpose": "Maps every normative MUST statement in the two specs to the tests that enforce it. A specification with no executable consequence is documentation, so this file is the bridge. tests/test_normative_coverage.py reads it and fails when a MUST statement has no entry at all, which forces new rules to be triaged rather than silently unenforced.",
+  "ratchet": {
+    "uncovered_count": 5,
+    "uncovered": [
+      "encoding \u00a72.3",
+      "semantics \u00a71.2",
+      "semantics \u00a73.4",
+      "semantics \u00a77.7",
+      "semantics \u00a78.2"
+    ],
+    "rule": "This number may go down and must never go up. A new MUST statement either arrives with a test or is added here with a reason, and adding one without a reason fails the suite."
+  },
+  "documents": {
+    "docs/DETERMINISTIC_SEMANTICS.md": {
+      "1.1": {
+        "tests": [
+          "tests.test_canonical.CanonicalResultTests"
+        ],
+        "note": "State is exactly ip, stack, output, steps: the canonical result encodes all of it, so extra state would show up as an unencodable field."
+      },
+      "1.2": {
+        "tests": [],
+        "uncovered_reason": "No test mutates the instruction stream. Needs a vector that would differ if instructions were writable."
+      },
+      "1.7": {
+        "tests": [
+          "tests.test_profile.ProfileRequiredTests.test_differing_budget_is_a_differing_execution_not_a_differing_answer",
+          "tests.test_golden.CoverageTests.test_budget_boundary_is_covered_on_both_sides"
+        ]
+      },
+      "1.8": {
+        "tests": [
+          "tests.test_profile.TrapTaxonomyTests.test_ip_out_of_range",
+          "tests.test_golden.GoldenVectorTests.test_every_vector_reproduces_its_recorded_result_and_hash"
+        ]
+      },
+      "1.9": {
+        "tests": [
+          "tests.test_malformed.MalformedModuleTests.test_reject_unknown_opcode"
+        ],
+        "note": "Rejected at parse rather than execution, which is stricter than the rule requires."
+      },
+      "2.3": {
+        "tests": [
+          "tests.test_numeric.DivisionTests.test_truncates_toward_zero",
+          "tests.test_golden.GoldenVectorTests.test_every_vector_reproduces_its_recorded_result_and_hash"
+        ],
+        "note": "Golden vector sub-operand-order."
+      },
+      "3.3": {
+        "tests": [
+          "tests.test_profile.TrapTaxonomyTests.test_stack_underflow"
+        ]
+      },
+      "3.4": {
+        "tests": [],
+        "uncovered_reason": "No test asserts the absence of an implementation stack limit. Needs a deep-stack vector near step_budget."
+      },
+      "4.2": {
+        "tests": [
+          "tests.test_numeric.WrappingTests",
+          "tests.test_golden.CoverageTests.test_int64_min_is_actually_reached"
+        ]
+      },
+      "4.3": {
+        "tests": [
+          "tests.test_numeric.DivisionTests.test_does_not_floor",
+          "tests.test_golden.CoverageTests.test_negative_division_truncates_toward_zero"
+        ]
+      },
+      "4.4": {
+        "tests": [
+          "tests.test_numeric.DivisionTests.test_divide_by_zero_is_a_canonical_trap"
+        ]
+      },
+      "4.5": {
+        "tests": [
+          "tests.test_numeric.DivisionTests.test_min_over_minus_one_is_a_canonical_trap"
+        ]
+      },
+      "4.7": {
+        "tests": [
+          "tests.test_numeric.OperandWidthTests.test_every_byte_is_reachable",
+          "tests.test_golden.CoverageTests.test_the_whole_byte_range_is_covered"
+        ]
+      },
+      "6.3": {
+        "tests": [
+          "tests.test_profile.TrapTaxonomyTests.test_taxonomy_is_closed_and_unique",
+          "tests.test_golden.CoverageTests.test_every_reachable_trap_code_has_a_vector"
+        ]
+      },
+      "6.4": {
+        "tests": [
+          "tests.test_canonical.CanonicalResultTests.test_human_detail_never_enters_the_encoding",
+          "tests.test_hashing.InvariantTests.test_trap_detail_does_not_affect_the_hash"
+        ]
+      },
+      "6.6": {
+        "tests": [
+          "tests.test_hashing.CrossProcessTests.test_hash_is_stable_across_processes",
+          "tests.test_golden.GoldenVectorTests.test_every_vector_reproduces_its_recorded_result_and_hash"
+        ],
+        "note": "Partial: a fresh process and the recorded vectors stand in for a second implementation. Only a real second implementation closes this."
+      },
+      "7.1": {
+        "tests": [
+          "tests.test_hashing.CrossProcessTests.test_hash_does_not_depend_on_the_file_path"
+        ],
+        "note": "Partial: covers paths. No test proves the absence of clock or entropy access."
+      },
+      "7.6": {
+        "tests": [
+          "tests.test_profile.ProfileRequiredTests.test_run_module_will_not_execute_without_a_profile",
+          "tests.test_profile.ProfileValidationTests.test_step_budget_is_required_when_parsing"
+        ]
+      },
+      "7.7": {
+        "tests": [],
+        "uncovered_reason": "No test runs an older profile_version against the current runtime. Needs a v0 profile fixture."
+      },
+      "8.2": {
+        "tests": [],
+        "uncovered_reason": "Unobservable-optimisation clause. Not testable against a single sequential implementation."
+      }
+    },
+    "docs/CANONICAL_ENCODING.md": {
+      "1": {
+        "tests": [
+          "tests.test_canonical.CanonicalJsonTests"
+        ]
+      },
+      "2": {
+        "tests": [
+          "tests.test_canonical.CanonicalModuleTests.test_rejects_nonzero_flags",
+          "tests.test_canonical.CanonicalModuleTests.test_rejects_nonzero_reserved",
+          "tests.test_canonical.CanonicalModuleTests.test_header_size_is_what_the_format_says"
+        ],
+        "note": "The layout table's MUST-be-zero rows for flags and reserved."
+      },
+      "2.1": {
+        "tests": [
+          "tests.test_canonical.CanonicalModuleTests.test_rejects_trailing_bytes_rather_than_ignoring_them"
+        ]
+      },
+      "2.2": {
+        "tests": [
+          "tests.test_canonical.CanonicalModuleTests.test_rejects_nonzero_flags",
+          "tests.test_canonical.CanonicalModuleTests.test_rejects_nonzero_reserved"
+        ]
+      },
+      "2.3": {
+        "tests": [],
+        "uncovered_reason": "No test builds two modules differing only in an ignored operand byte and asserts distinct hashes."
+      },
+      "3.1": {
+        "tests": [
+          "tests.test_profile.ProfileValidationTests.test_unknown_fields_are_rejected_not_ignored"
+        ]
+      },
+      "3.2": {
+        "tests": [
+          "tests.test_profile.ProfileValidationTests.test_step_budget_is_required_when_parsing"
+        ]
+      },
+      "4.4": {
+        "tests": [
+          "tests.test_canonical.CanonicalResultTests.test_human_detail_never_enters_the_encoding"
+        ]
+      }
+    }
+  }
+}

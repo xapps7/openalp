@@ -1,0 +1,414 @@
+{
+  "corpus": "golden-v0.3",
+  "frozen_at": "2026-11-03",
+  "hash_algorithm": "sha256",
+  "purpose": "The artifact a second implementation is checked against. Each vector carries the module bytes, the execution profile, the expected canonical result and the expected hash, so a new implementation can be verified without running this one. Aimed at the edges where languages actually disagree, not the happy path.",
+  "location_note": "Deliberately outside samples/. samples/gen_samples.py rewrites samples/ from the code under test, so a vector living there would be regenerated to match whatever the code did and could never fail.",
+  "rules": [
+    "Never regenerate to make a test pass.",
+    "A deliberate format change gets a new corpus directory plus a documented migration."
+  ],
+  "trap_codes_covered": [
+    "trap.div_by_zero",
+    "trap.div_overflow",
+    "trap.ip_out_of_range",
+    "trap.stack_underflow",
+    "trap.step_budget_exceeded"
+  ],
+  "trap_codes_not_covered": {
+    "trap.invalid_opcode": "Unreachable by a valid artifact: parse_module rejects an unknown opcode before execution begins, so no module containing one can be built. The runtime check is defensive and cannot be exercised by a golden vector."
+  },
+  "vectors": [
+    {
+      "id": "wrap-mul-overflow",
+      "why": "127 squared repeatedly. Arbitrary-precision arithmetic gives a 112-bit value here; i64 must wrap.",
+      "artifact_hex": "414c50310100000000001200017f00000900000004000000090000000400000009000000040000000900000004000000090000000400000009000000040000000900000004000000090000000400000008000000",
+      "profile": {
+        "profile_version": "1",
+        "protocol_version": "0.2",
+        "module_format_version": 1,
+        "step_budget": 100000
+      },
+      "expected_result": {
+        "result_version": "1",
+        "outcome": "halted",
+        "steps": 18,
+        "stack": [
+          -7270986046695833599
+        ],
+        "output_hex": ""
+      },
+      "expected_hash": "sha256:cd79a766bc9c0f71eedfd4c8bf113a7715dcbf0ca21d240b7b4eab6896fc0df3"
+    },
+    {
+      "id": "wrap-add-to-int64-min",
+      "why": "2^63 by doubling. Must wrap to INT64_MIN, not grow.",
+      "artifact_hex": "414c503101000000000080000101000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000008000000",
+      "profile": {
+        "profile_version": "1",
+        "protocol_version": "0.2",
+        "module_format_version": 1,
+        "step_budget": 100000
+      },
+      "expected_result": {
+        "result_version": "1",
+        "outcome": "halted",
+        "steps": 128,
+        "stack": [
+          -9223372036854775808
+        ],
+        "output_hex": ""
+      },
+      "expected_hash": "sha256:2db4b4ccdc077f698af485245e3e9bd6b33befa040d92ed32905985ff3d7c0dc"
+    },
+    {
+      "id": "div-negative-truncates-toward-zero",
+      "why": "-7 / 2. Python floors to -4; C, Rust, Go and WASM truncate to -3. The single most likely divergence.",
+      "artifact_hex": "414c5031010000000000040001f90000010200000500000008000000",
+      "profile": {
+        "profile_version": "1",
+        "protocol_version": "0.2",
+        "module_format_version": 1,
+        "step_budget": 100000
+      },
+      "expected_result": {
+        "result_version": "1",
+        "outcome": "halted",
+        "steps": 4,
+        "stack": [
+          -3
+        ],
+        "output_hex": ""
+      },
+      "expected_hash": "sha256:57b63bcad7d41c8c2f53d8165672f06373fdf6f2cf8aa8fb0fe4b3096c1a8076"
+    },
+    {
+      "id": "div-positive-by-negative",
+      "why": "7 / -2 must also truncate toward zero, giving -3.",
+      "artifact_hex": "414c503101000000000004000107000001fe00000500000008000000",
+      "profile": {
+        "profile_version": "1",
+        "protocol_version": "0.2",
+        "module_format_version": 1,
+        "step_budget": 100000
+      },
+      "expected_result": {
+        "result_version": "1",
+        "outcome": "halted",
+        "steps": 4,
+        "stack": [
+          -3
+        ],
+        "output_hex": ""
+      },
+      "expected_hash": "sha256:58142f7b0b6f9e92bdde1bb5f52b6a5bca0a56f197590f6ef98a3a68560d0239"
+    },
+    {
+      "id": "div-both-negative",
+      "why": "-7 / -2 = 3. Sign handling must not double-negate.",
+      "artifact_hex": "414c5031010000000000040001f9000001fe00000500000008000000",
+      "profile": {
+        "profile_version": "1",
+        "protocol_version": "0.2",
+        "module_format_version": 1,
+        "step_budget": 100000
+      },
+      "expected_result": {
+        "result_version": "1",
+        "outcome": "halted",
+        "steps": 4,
+        "stack": [
+          3
+        ],
+        "output_hex": ""
+      },
+      "expected_hash": "sha256:61415d6b8a13a08e65a0108a8e37ec4fecb6f0711e8072da9c063f16e230da8a"
+    },
+    {
+      "id": "sub-operand-order",
+      "why": "Top of stack is the RIGHT operand: 10 then 3 gives 7, not -7. Easy to invert.",
+      "artifact_hex": "414c50310100000000000400010a0000010300000300000008000000",
+      "profile": {
+        "profile_version": "1",
+        "protocol_version": "0.2",
+        "module_format_version": 1,
+        "step_budget": 100000
+      },
+      "expected_result": {
+        "result_version": "1",
+        "outcome": "halted",
+        "steps": 4,
+        "stack": [
+          7
+        ],
+        "output_hex": ""
+      },
+      "expected_hash": "sha256:a71321d5718e95ce7388bad8c4594a9d1a9b446a28c04dc71f49858f488577f4"
+    },
+    {
+      "id": "push-const-sign-extends",
+      "why": "Operand 200 is a signed byte, so it pushes -56.",
+      "artifact_hex": "414c5031010000000000020001c8000008000000",
+      "profile": {
+        "profile_version": "1",
+        "protocol_version": "0.2",
+        "module_format_version": 1,
+        "step_budget": 100000
+      },
+      "expected_result": {
+        "result_version": "1",
+        "outcome": "halted",
+        "steps": 2,
+        "stack": [
+          -56
+        ],
+        "output_hex": ""
+      },
+      "expected_hash": "sha256:8a716d57ecd9e266185718b238e1cb922169f666a7b32086e3d2471a007af2f4"
+    },
+    {
+      "id": "full-stack-is-part-of-the-result",
+      "why": "Two values left on the stack. A result recording only the top is not this result.",
+      "artifact_hex": "414c50310100000000000300010100000102000008000000",
+      "profile": {
+        "profile_version": "1",
+        "protocol_version": "0.2",
+        "module_format_version": 1,
+        "step_budget": 100000
+      },
+      "expected_result": {
+        "result_version": "1",
+        "outcome": "halted",
+        "steps": 3,
+        "stack": [
+          1,
+          2
+        ],
+        "output_hex": ""
+      },
+      "expected_hash": "sha256:288f18318aba5ef377011a9643986a431e8d73c65276badc6c6afea1ad40aac7"
+    },
+    {
+      "id": "trap-div-by-zero",
+      "why": "Divisor zero must trap, not yield zero or infinity.",
+      "artifact_hex": "414c5031010000000000040001040000010000000500000008000000",
+      "profile": {
+        "profile_version": "1",
+        "protocol_version": "0.2",
+        "module_format_version": 1,
+        "step_budget": 100000
+      },
+      "expected_result": {
+        "result_version": "1",
+        "outcome": "trap",
+        "steps": 3,
+        "stack": [],
+        "output_hex": "",
+        "trap_code": "trap.div_by_zero"
+      },
+      "expected_hash": "sha256:c6129c00cdd4ed8409893df3a647ab8cd894bf4edbca11912759e54705450b66"
+    },
+    {
+      "id": "trap-div-overflow",
+      "why": "INT64_MIN / -1. The one signed division whose quotient is not representable.",
+      "artifact_hex": "414c503101000000000082000101000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000009000000020000000900000002000000090000000200000001ff00000500000008000000",
+      "profile": {
+        "profile_version": "1",
+        "protocol_version": "0.2",
+        "module_format_version": 1,
+        "step_budget": 100000
+      },
+      "expected_result": {
+        "result_version": "1",
+        "outcome": "trap",
+        "steps": 129,
+        "stack": [],
+        "output_hex": "",
+        "trap_code": "trap.div_overflow"
+      },
+      "expected_hash": "sha256:3f15c656b5070e13408d106681d5b6d374abc23fc8a6524efa30168bafaa00fa"
+    },
+    {
+      "id": "trap-stack-underflow",
+      "why": "ADD with an empty stack must trap, never read an undefined value.",
+      "artifact_hex": "414c503101000000000002000200000008000000",
+      "profile": {
+        "profile_version": "1",
+        "protocol_version": "0.2",
+        "module_format_version": 1,
+        "step_budget": 100000
+      },
+      "expected_result": {
+        "result_version": "1",
+        "outcome": "trap",
+        "steps": 0,
+        "stack": [],
+        "output_hex": "",
+        "trap_code": "trap.stack_underflow"
+      },
+      "expected_hash": "sha256:da9056a217396ad3aac471516172fc9c9c2bf1713743dffaeb9eecdc378b68ab"
+    },
+    {
+      "id": "trap-ip-out-of-range",
+      "why": "Last instruction is not HALT, so execution runs off the end. That is a trap, not a halt.",
+      "artifact_hex": "414c5031010000000000010001010000",
+      "profile": {
+        "profile_version": "1",
+        "protocol_version": "0.2",
+        "module_format_version": 1,
+        "step_budget": 100000
+      },
+      "expected_result": {
+        "result_version": "1",
+        "outcome": "trap",
+        "steps": 1,
+        "stack": [
+          1
+        ],
+        "output_hex": "",
+        "trap_code": "trap.ip_out_of_range"
+      },
+      "expected_hash": "sha256:9a8d6898389b3da52d00bc3f6d0cc5a4b9542879c2718573fa7b0e95a0418b5b"
+    },
+    {
+      "id": "budget-exact-fit",
+      "why": "Budget 11 for an 11-step program halts on the final step.",
+      "artifact_hex": "414c50310100000000000b000000000000000000000000000000000000000000000000000000000000000000000000000000000008000000",
+      "profile": {
+        "profile_version": "1",
+        "protocol_version": "0.2",
+        "module_format_version": 1,
+        "step_budget": 11
+      },
+      "expected_result": {
+        "result_version": "1",
+        "outcome": "halted",
+        "steps": 11,
+        "stack": [],
+        "output_hex": ""
+      },
+      "expected_hash": "sha256:2e1b583347359cdc93bf4d1c99173fddd19e9370452d0c28b12da9e68bd4ee89"
+    },
+    {
+      "id": "budget-one-short",
+      "why": "Budget 10 for the same program traps. Off-by-one here is a divergence.",
+      "artifact_hex": "414c50310100000000000b000000000000000000000000000000000000000000000000000000000000000000000000000000000008000000",
+      "profile": {
+        "profile_version": "1",
+        "protocol_version": "0.2",
+        "module_format_version": 1,
+        "step_budget": 10
+      },
+      "expected_result": {
+        "result_version": "1",
+        "outcome": "trap",
+        "steps": 10,
+        "stack": [],
+        "output_hex": "",
+        "trap_code": "trap.step_budget_exceeded"
+      },
+      "expected_hash": "sha256:ba47fb65241408469144a4a2d215a4c626da2d33594eefc1f3e8754c2bd90545"
+    },
+    {
+      "id": "budget-one-step-program",
+      "why": "Smallest legal budget: 1 step, HALT.",
+      "artifact_hex": "414c5031010000000000010008000000",
+      "profile": {
+        "profile_version": "1",
+        "protocol_version": "0.2",
+        "module_format_version": 1,
+        "step_budget": 1
+      },
+      "expected_result": {
+        "result_version": "1",
+        "outcome": "halted",
+        "steps": 1,
+        "stack": [],
+        "output_hex": ""
+      },
+      "expected_hash": "sha256:6f6eda5b006bacfba138af070cfeddc7005ace1a74f5aa60eaca19de8f91683d"
+    },
+    {
+      "id": "output-all-256-bytes",
+      "why": "Every byte 0-255 emitted in order. Catches both the code-point bug and any reordering.",
+      "artifact_hex": "414c50310100000000000102010000000b000000010100000b000000010200000b000000010300000b000000010400000b000000010500000b000000010600000b000000010700000b000000010800000b000000010900000b000000010a00000b000000010b00000b000000010c00000b000000010d00000b000000010e00000b000000010f00000b000000011000000b000000011100000b000000011200000b000000011300000b000000011400000b000000011500000b000000011600000b000000011700000b000000011800000b000000011900000b000000011a00000b000000011b00000b000000011c00000b000000011d00000b000000011e00000b000000011f00000b000000012000000b000000012100000b000000012200000b000000012300000b000000012400000b000000012500000b000000012600000b000000012700000b000000012800000b000000012900000b000000012a00000b000000012b00000b000000012c00000b000000012d00000b000000012e00000b000000012f00000b000000013000000b000000013100000b000000013200000b000000013300000b000000013400000b000000013500000b000000013600000b000000013700000b000000013800000b000000013900000b000000013a00000b000000013b00000b000000013c00000b000000013d00000b000000013e00000b000000013f00000b000000014000000b000000014100000b000000014200000b000000014300000b000000014400000b000000014500000b000000014600000b000000014700000b000000014800000b000000014900000b000000014a00000b000000014b00000b000000014c00000b000000014d00000b000000014e00000b000000014f00000b000000015000000b000000015100000b000000015200000b000000015300000b000000015400000b000000015500000b000000015600000b000000015700000b000000015800000b000000015900000b000000015a00000b000000015b00000b000000015c00000b000000015d00000b000000015e00000b000000015f00000b000000016000000b000000016100000b000000016200000b000000016300000b000000016400000b000000016500000b000000016600000b000000016700000b000000016800000b000000016900000b000000016a00000b000000016b00000b000000016c00000b000000016d00000b000000016e00000b000000016f00000b000000017000000b000000017100000b000000017200000b000000017300000b000000017400000b000000017500000b000000017600000b000000017700000b000000017800000b000000017900000b000000017a00000b000000017b00000b000000017c00000b000000017d00000b000000017e00000b000000017f00000b000000018000000b000000018100000b000000018200000b000000018300000b000000018400000b000000018500000b000000018600000b000000018700000b000000018800000b000000018900000b000000018a00000b000000018b00000b000000018c00000b000000018d00000b000000018e00000b000000018f00000b000000019000000b000000019100000b000000019200000b000000019300000b000000019400000b000000019500000b000000019600000b000000019700000b000000019800000b000000019900000b000000019a00000b000000019b00000b000000019c00000b000000019d00000b000000019e00000b000000019f00000b00000001a000000b00000001a100000b00000001a200000b00000001a300000b00000001a400000b00000001a500000b00000001a600000b00000001a700000b00000001a800000b00000001a900000b00000001aa00000b00000001ab00000b00000001ac00000b00000001ad00000b00000001ae00000b00000001af00000b00000001b000000b00000001b100000b00000001b200000b00000001b300000b00000001b400000b00000001b500000b00000001b600000b00000001b700000b00000001b800000b00000001b900000b00000001ba00000b00000001bb00000b00000001bc00000b00000001bd00000b00000001be00000b00000001bf00000b00000001c000000b00000001c100000b00000001c200000b00000001c300000b00000001c400000b00000001c500000b00000001c600000b00000001c700000b00000001c800000b00000001c900000b00000001ca00000b00000001cb00000b00000001cc00000b00000001cd00000b00000001ce00000b00000001cf00000b00000001d000000b00000001d100000b00000001d200000b00000001d300000b00000001d400000b00000001d500000b00000001d600000b00000001d700000b00000001d800000b00000001d900000b00000001da00000b00000001db00000b00000001dc00000b00000001dd00000b00000001de00000b00000001df00000b00000001e000000b00000001e100000b00000001e200000b00000001e300000b00000001e400000b00000001e500000b00000001e600000b00000001e700000b00000001e800000b00000001e900000b00000001ea00000b00000001eb00000b00000001ec00000b00000001ed00000b00000001ee00000b00000001ef00000b00000001f000000b00000001f100000b00000001f200000b00000001f300000b00000001f400000b00000001f500000b00000001f600000b00000001f700000b00000001f800000b00000001f900000b00000001fa00000b00000001fb00000b00000001fc00000b00000001fd00000b00000001fe00000b00000001ff00000b00000008000000",
+      "profile": {
+        "profile_version": "1",
+        "protocol_version": "0.2",
+        "module_format_version": 1,
+        "step_budget": 100000
+      },
+      "expected_result": {
+        "result_version": "1",
+        "outcome": "halted",
+        "steps": 513,
+        "stack": [],
+        "output_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"
+      },
+      "expected_hash": "sha256:04816977ce251ae8258a02c39b62128d7e6c0a3aac2263e4338b20bb9a57dd16"
+    },
+    {
+      "id": "output-empty-is-not-absent",
+      "why": "No PRINT_CHAR at all. output_hex must be the empty string.",
+      "artifact_hex": "414c503101000000000002000101000008000000",
+      "profile": {
+        "profile_version": "1",
+        "protocol_version": "0.2",
+        "module_format_version": 1,
+        "step_budget": 100000
+      },
+      "expected_result": {
+        "result_version": "1",
+        "outcome": "halted",
+        "steps": 2,
+        "stack": [
+          1
+        ],
+        "output_hex": ""
+      },
+      "expected_hash": "sha256:ae67b078e29f9e25aa3eea3c72bae59274ed850b85bda4c438b6a2b0c5ecc42a"
+    },
+    {
+      "id": "jz-pops-even-when-not-taken",
+      "why": "JZ pops its condition whether or not it branches. A peeking implementation differs by one stack slot.",
+      "artifact_hex": "414c503101000000000005000105000007040000010700000800000008000000",
+      "profile": {
+        "profile_version": "1",
+        "protocol_version": "0.2",
+        "module_format_version": 1,
+        "step_budget": 100000
+      },
+      "expected_result": {
+        "result_version": "1",
+        "outcome": "halted",
+        "steps": 4,
+        "stack": [
+          7
+        ],
+        "output_hex": ""
+      },
+      "expected_hash": "sha256:c9f6603de36cf9c64324ed586c0185d97e9ccdcdb3b0bfd25af9637e2bde3b7b"
+    },
+    {
+      "id": "jmp-targets-instruction-index",
+      "why": "JMP operand is an instruction index, not a byte offset. A byte-offset reading lands elsewhere.",
+      "artifact_hex": "414c5031010000000000040006020000016300000101000008000000",
+      "profile": {
+        "profile_version": "1",
+        "protocol_version": "0.2",
+        "module_format_version": 1,
+        "step_budget": 100000
+      },
+      "expected_result": {
+        "result_version": "1",
+        "outcome": "halted",
+        "steps": 3,
+        "stack": [
+          1
+        ],
+        "output_hex": ""
+      },
+      "expected_hash": "sha256:cebd7c36453301cb28ee06162721e54c284d8e8079c77c8e7c250bb3b9d4c96c"
+    }
+  ]
+}

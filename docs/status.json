@@ -253,7 +253,7 @@
         "phase": "phase-1-specification",
         "order": 4,
         "title": "Canonical result hash and the determinism definition",
-        "state": "open",
+        "state": "done",
         "pillar": "verifiable execution",
         "why": "Formally define deterministic execution and make the invariant computable: same artifact + same input + same profile = same canonical result hash. A definition nobody can compute is a slogan.",
         "acceptance": [
@@ -266,14 +266,21 @@
           "D1-numeric-model",
           "D2-closed-computations"
         ],
-        "inherits": "canonical_preimage() in alp/canonical.py is the form to hash. Trap results are now encodable, so this is no longer blocked."
+        "inherits": "canonical_preimage() in alp/canonical.py is the form to hash. Trap results are now encodable, so this is no longer blocked.",
+        "completed": "2026-11-03",
+        "notes": [
+          "alp/hashing.py states the invariant formally, including what it is quantified over and what is deliberately excluded.",
+          "H(A,P) = sha256(canonical_preimage_json(A,P,R)), prefixed with the algorithm so it is never implied.",
+          "New CLI: alp hash <module> [--profile|--step-budget].",
+          "A trap hashes exactly as a halt does. Verified: two runs with identical results but different budgets produce different hashes, which is the profile doing its job."
+        ]
       },
       {
         "id": "p1-golden-vectors",
         "phase": "phase-1-specification",
         "order": 5,
         "title": "Golden vectors",
-        "state": "open",
+        "state": "done",
         "pillar": "deterministic machine representation",
         "why": "The artifact a second implementation is checked against. Must cover the edges that actually diverge between languages, not the happy path.",
         "acceptance": [
@@ -287,6 +294,13 @@
         "unblocked_by": [
           "D1-numeric-model",
           "D2-closed-computations"
+        ],
+        "completed": "2026-11-03",
+        "notes": [
+          "spec/golden/vectors.json: 19 vectors, each with artifact bytes, profile, expected canonical result and expected hash.",
+          "Aimed at the edges languages actually disagree on: i64 wraparound, INT64_MIN reached by doubling, negative division in all four sign combinations, operand order for SUB, the step-budget boundary on both sides, and all 256 output bytes.",
+          "5 of 6 trap codes have vectors. trap.invalid_opcode is unreachable by a valid artifact because parse_module rejects unknown opcodes first; recorded as unreachable with the reason rather than left missing.",
+          "Stored in spec/golden/, outside samples/, because gen_samples.py rewrites samples/ from the code under test."
         ]
       },
       {
@@ -294,7 +308,7 @@
         "phase": "phase-1-specification",
         "order": 6,
         "title": "Exhaustive conformance tests proving the guarantees",
-        "state": "open",
+        "state": "done",
         "pillar": "verifiable execution",
         "why": "Each normative statement in the two specs must have a test that fails if the statement is violated. A specification with no executable consequence is documentation.",
         "acceptance": [
@@ -306,6 +320,13 @@
         "unblocked_by": [
           "D1-numeric-model",
           "D2-closed-computations"
+        ],
+        "completed": "2026-11-03",
+        "notes": [
+          "spec/conformance-map.json maps all 28 normative sections to the tests enforcing them.",
+          "tests/test_normative_coverage.py parses both specs for MUST statements and fails on any with no map entry, any entry naming a test that does not exist, and any entry for a section that no longer has a MUST.",
+          "Built as a ratchet: 5 known gaps carry reasons and the suite stays green, but the count may only fall. An honest spec and a green build stop being in tension.",
+          "\u00a76.6 and \u00a77.1 are marked partial, not done: cross-implementation agreement and the absence of clock or entropy access cannot be closed by a single implementation."
         ]
       },
       {
@@ -681,5 +702,21 @@
       "lesson": "A SUCCEEDED run status means the session completed, not that work happened. Trust the commit log, never the run status.",
       "action": "Task re-enabled. Folder access must be granted to the scheduled task from the desktop app; it cannot be attached remotely."
     }
-  ]
+  ],
+  "phase_1_summary": {
+    "state": "complete \u2014 all six tasks done",
+    "completed": "2026-11-03",
+    "deliverables": [
+      "docs/DETERMINISTIC_SEMANTICS.md",
+      "docs/CANONICAL_ENCODING.md",
+      "spec/golden/vectors.json",
+      "spec/conformance-map.json",
+      "alp/profile.py, alp/canonical.py, alp/hashing.py",
+      "tests/fixtures/v0.3.0/"
+    ],
+    "findings": "all eight closed",
+    "tests": "109 at phase start, 185 now",
+    "honest_caveat": "The invariant is now computable and enforced against a recorded corpus, but it has only ever been checked against one implementation. \u00a76.6 stays partial until a second implementation exists. That is the real test of this phase's work, and it has not happened yet.",
+    "next": "phase 2 (intent-compilation-spike, mcp-a2a-adapters) opens when Gaurav says so."
+  }
 }

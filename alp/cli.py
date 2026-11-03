@@ -8,7 +8,9 @@ import sys
 
 from .decompile import to_python_like
 from .bundle import BundleError, create_bundle, run_bundle
+from .canonical import CanonicalError
 from .format import ALPFormatError, parse_module
+from .hashing import hash_module_file
 from .handshake import HandshakeError, compatibility, parse_hello
 from .integrity import (
     create_manifest,
@@ -153,6 +155,18 @@ def cmd_runtime_validate(args: argparse.Namespace) -> int:
         print(f"INVALID: {exc}")
         return 1
     print(json.dumps(result))
+    return 0
+
+
+def cmd_hash(args: argparse.Namespace) -> int:
+    """Compute the canonical result hash: H(artifact, profile)."""
+    try:
+        profile = _resolve_profile(args)
+        result, digest = hash_module_file(pathlib.Path(args.path), profile)
+    except (OSError, ALPFormatError, CanonicalError, ProfileError, VMError) as exc:
+        print(f"ERROR: {exc}")
+        return 1
+    print(json.dumps({"hash": digest, "result": result.to_dict(), "profile": profile.to_dict()}))
     return 0
 
 
@@ -412,6 +426,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_runtime_validate.add_argument("path")
     p_runtime_validate.add_argument("--hello", required=True)
     p_runtime_validate.set_defaults(func=cmd_runtime_validate)
+
+    p_hash = sub.add_parser("hash", help="canonical result hash for a module under a profile")
+    p_hash.add_argument("path")
+    _add_profile_args(p_hash)
+    p_hash.set_defaults(func=cmd_hash)
 
     p_decompile = sub.add_parser("decompile", help="decompile an ALP module to Python-like code")
     p_decompile.add_argument("path")
