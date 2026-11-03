@@ -154,3 +154,23 @@
 ### Total
 
 - `11.5h`
+
+## 2026-11-03
+
+### Block 1
+
+- Duration: `2.0h`
+- Focus: `p1-execution-semantics` — the phase-1 deliverable, plus the code it depends on
+- Output:
+  - added `alp/profile.py`: `ExecutionProfile` with required `step_budget`, canonical serialization, shipped as `samples/profile.default.json`
+  - `run_module(module, profile)` — no budget argument, no default anywhere in the library; `run_bundle` and the transport executor take a profile too
+  - every CLI command that executes now echoes the profile it used
+  - closed trap taxonomy of six codes; budget exhaustion is a trap, not a bare `VMError`
+  - added `tests/test_profile.py` (20 cases); suite `109` -> `129`
+  - wrote [DETERMINISTIC_SEMANTICS.md](docs/DETERMINISTIC_SEMANTICS.md) v0.3 — all seven areas, superseding `runtime-semantics-v0.2`
+  - split `decided` / `specified` / `implemented` / `enforced` in `status.json`; F4 had been reading as done since August while the code ignored it
+  - 66 days of no commits diagnosed: the build agent never had folder access and never worked
+
+### Total
+
+- `2.0h`

@@ -18,7 +18,7 @@
       "id": "runtime-semantics-v0.2",
       "path": "spec/runtime-semantics-v0.2.md",
       "kind": "runtime-semantics",
-      "status": "active"
+      "status": "superseded"
     },
     {
       "id": "transport-envelope-v0.2",
@@ -31,6 +31,13 @@
       "path": "spec/transport-semantics-v0.2.md",
       "kind": "transport-semantics",
       "status": "active"
+    },
+    {
+      "id": "deterministic-semantics-v0.3",
+      "path": "docs/DETERMINISTIC_SEMANTICS.md",
+      "kind": "execution-semantics",
+      "status": "active",
+      "supersedes": "runtime-semantics-v0.2"
     }
   ]
 }

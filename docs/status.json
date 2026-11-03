@@ -2,7 +2,7 @@
   "project": "OpenALP",
   "protocol": "ALP",
   "protocol_version": "0.2",
-  "as_of": "2026-08-27",
+  "as_of": "2026-11-03",
   "authority": "This file is the single machine-readable source of truth for project status and the active work queue. Prose roadmap documents are historical context and do not override it.",
   "rules": [
     "Work locally. Do not push to git without explicit approval.",
@@ -194,7 +194,7 @@
         "phase": "phase-1-specification",
         "order": 2,
         "title": "DETERMINISTIC_SEMANTICS.md",
-        "state": "open",
+        "state": "done",
         "pillar": "deterministic machine representation",
         "why": "The formal execution semantics: execution model, ordering rules, memory model, numeric behavior, error propagation, external interaction rules, concurrency semantics. Resolves F4, F5, F6 and F8 in normative language.",
         "acceptance": [
@@ -209,7 +209,15 @@
           "D1-numeric-model",
           "D2-closed-computations"
         ],
-        "inherits": "F5 trap taxonomy. trap.div_by_zero and trap.div_overflow already exist; the closed set is defined here."
+        "inherits": "F5 trap taxonomy. trap.div_by_zero and trap.div_overflow already exist; the closed set is defined here.",
+        "completed": "2026-11-03",
+        "notes": [
+          "docs/DETERMINISTIC_SEMANTICS.md v0.3 covers all seven areas normatively and supersedes spec/runtime-semantics-v0.2.md.",
+          "F4 and F5 are now implemented, not just decided: ExecutionProfile carries step_budget with no default, and traps come from a closed set of six codes.",
+          "F8 stated normatively in section 8.",
+          "Two known deviations recorded in the spec itself rather than left implicit: output is still code points not bytes (F7, goes to p1-canonical-encoding), and a trap discards its result so failing executions are not yet hashable (goes to p1-result-hash).",
+          "Section 10 lists the normative statements that have no test yet. That list is the input to p1-conformance-tests."
+        ]
       },
       {
         "id": "p1-canonical-encoding",
@@ -229,7 +237,7 @@
           "D1-numeric-model",
           "D2-closed-computations"
         ],
-        "inherits": "D1 clause: output is a byte string, never text, no encoding. Deferred here from p1-numeric-model."
+        "inherits": "D1 output-as-bytes clause (F7). Note the current tests in test_numeric.py assert the text behaviour, so the suite encodes the wrong rule \u2014 runtime and assertions both change."
       },
       {
         "id": "p1-result-hash",
@@ -248,7 +256,8 @@
         "unblocked_by": [
           "D1-numeric-model",
           "D2-closed-computations"
-        ]
+        ],
+        "inherits": "A trap's canonical result. Traps currently discard output and stack, so a failing execution cannot yet be hashed."
       },
       {
         "id": "p1-golden-vectors",
@@ -558,7 +567,7 @@
         "observed": "The same module halts normally under a 1000-step budget and traps under a 5-step budget. max_steps is a Python keyword argument, present in neither the module nor any declared profile.",
         "consequence": "The step budget silently changes the result of an identical artifact, so it must be part of the execution profile the invariant names, or the invariant is unprovable.",
         "recommended_resolution": "Make the step budget a required, canonically encoded field of the execution profile, and include it in the hash preimage.",
-        "status": "resolved by D2-closed-computations"
+        "status": "decided by D2-closed-computations; implemented 2026-11-03 (ExecutionProfile)"
       },
       {
         "id": "F5",
@@ -567,7 +576,7 @@
         "observed": "Failures raise VMError with free-text messages such as 'stack underflow in ADD: need 2, have 0'.",
         "consequence": "A failing execution has no canonical result, so it cannot be hashed or compared. Two implementations cannot agree that they failed the same way.",
         "recommended_resolution": "Define a closed set of canonical trap codes. A trap is a normal, hashable outcome, not an absence of one.",
-        "status": "to be specified in phase 1"
+        "status": "implemented 2026-11-03 (closed trap set) and specified in DETERMINISTIC_SEMANTICS.md section 6"
       },
       {
         "id": "F6",
@@ -576,7 +585,7 @@
         "observed": "The reference VM has no input mechanism at all; run_module takes a module and a step budget.",
         "consequence": "The target invariant names 'canonical input', which does not exist. Either an input model is defined or the spec must state that modules are closed computations and drop the term.",
         "decision_owner": "human",
-        "status": "resolved by D2-closed-computations"
+        "status": "decided by D2-closed-computations; specified in DETERMINISTIC_SEMANTICS.md section 7"
       },
       {
         "id": "F7",
@@ -585,7 +594,7 @@
         "observed": "Output accumulates Python str characters via chr(), producing code points rather than bytes.",
         "consequence": "Canonical output is ambiguous between a byte string and a text string with an encoding. Hashes computed over it would differ by implementation language.",
         "recommended_resolution": "Output is a byte string. Canonical encoding is the raw bytes; any text interpretation is out of scope.",
-        "status": "to be specified in phase 1"
+        "status": "open \u2014 spec rule written (section 5), implementation and tests still wrong"
       },
       {
         "id": "F8",
@@ -594,9 +603,16 @@
         "observed": "Execution is single-threaded with no concurrency primitives.",
         "consequence": "Not a defect, but the specification must state it normatively so a future implementation cannot introduce parallelism and claim conformance.",
         "recommended_resolution": "State that the execution model is strictly sequential and that no conforming implementation may observe or introduce concurrency within a single execution.",
-        "status": "to be specified in phase 1"
+        "status": "specified in DETERMINISTIC_SEMANTICS.md section 8; not yet test-enforced"
       }
-    ]
+    ],
+    "status_legend": {
+      "decided": "a human chose the rule",
+      "specified": "the rule is written normatively",
+      "implemented": "the code does it",
+      "enforced": "a test fails if the code stops doing it",
+      "note": "These are four different states. Earlier versions of this file used 'resolved' for the first and read as the last."
+    }
   },
   "blocking_summary": {
     "state": "unblocked",
