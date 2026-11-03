@@ -134,22 +134,22 @@ def run_module(module: Module, profile: ExecutionProfile, trace: bool = False) -
         elif op == 0x01:  # PUSH_CONST
             stack.append(_as_i8(inst.a))
         elif op == 0x02:  # ADD
-            _require_stack(stack, 2, "ADD")
+            _require_stack(stack, 2, "ADD", steps, bytes(output_bytes), profile)
             rhs = stack.pop()
             lhs = stack.pop()
             stack.append(wrap_i64(lhs + rhs))
         elif op == 0x03:  # SUB
-            _require_stack(stack, 2, "SUB")
+            _require_stack(stack, 2, "SUB", steps, bytes(output_bytes), profile)
             rhs = stack.pop()
             lhs = stack.pop()
             stack.append(wrap_i64(lhs - rhs))
         elif op == 0x04:  # MUL
-            _require_stack(stack, 2, "MUL")
+            _require_stack(stack, 2, "MUL", steps, bytes(output_bytes), profile)
             rhs = stack.pop()
             lhs = stack.pop()
             stack.append(wrap_i64(lhs * rhs))
         elif op == 0x05:  # DIV
-            _require_stack(stack, 2, "DIV")
+            _require_stack(stack, 2, "DIV", steps, bytes(output_bytes), profile)
             rhs = stack.pop()
             lhs = stack.pop()
             try:
@@ -160,20 +160,20 @@ def run_module(module: Module, profile: ExecutionProfile, trace: bool = False) -
         elif op == 0x06:  # JMP
             ip = inst.a
         elif op == 0x07:  # JZ
-            _require_stack(stack, 1, "JZ")
+            _require_stack(stack, 1, "JZ", steps, bytes(output_bytes), profile)
             value = stack.pop()
             if value == 0:
                 ip = inst.a
         elif op == 0x08:  # HALT
             halted = True
         elif op == 0x09:  # DUP
-            _require_stack(stack, 1, "DUP")
+            _require_stack(stack, 1, "DUP", steps, bytes(output_bytes), profile)
             stack.append(stack[-1])
         elif op == 0x0A:  # POP
-            _require_stack(stack, 1, "POP")
+            _require_stack(stack, 1, "POP", steps, bytes(output_bytes), profile)
             stack.pop()
         elif op == 0x0B:  # PRINT_CHAR
-            _require_stack(stack, 1, "PRINT_CHAR")
+            _require_stack(stack, 1, "PRINT_CHAR", steps, bytes(output_bytes), profile)
             value = stack.pop()
             # D1: total over the whole i64 range. Emits the low 8 bits, so
             # bytes 128-255 are reachable, which they were not while
@@ -201,6 +201,28 @@ def run_module(module: Module, profile: ExecutionProfile, trace: bool = False) -
     )
 
 
-def _require_stack(stack: list[int], n: int, op: str) -> None:
+def _require_stack(
+    stack: list[int],
+    n: int,
+    op: str,
+    steps: int,
+    output: bytes,
+    profile: ExecutionProfile,
+) -> None:
+    """Guard a pop. Takes the frame because a trap is a result (section 4).
+
+    This previously raised with only the stack, so `steps` defaulted to 0
+    and any output already produced was discarded. The C implementation in
+    impl/c/ disagreed on the step count and was right: section 1.4 counts
+    the step before the instruction's effects, and section 4 records the
+    trapping step.
+    """
     if len(stack) < n:
-        raise VMTrap("trap.stack_underflow", f"{op} needs {n}, have {len(stack)}", stack=tuple(stack))
+        raise VMTrap(
+            "trap.stack_underflow",
+            f"{op} needs {n}, have {len(stack)}",
+            steps,
+            tuple(stack),
+            output,
+            profile,
+        )

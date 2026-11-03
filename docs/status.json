@@ -634,6 +634,16 @@
         "consequence": "Not a defect, but the specification must state it normatively so a future implementation cannot introduce parallelism and claim conformance.",
         "recommended_resolution": "State that the execution model is strictly sequential and that no conforming implementation may observe or introduce concurrency within a single execution.",
         "status": "specified in DETERMINISTIC_SEMANTICS.md section 8; not yet test-enforced"
+      },
+      {
+        "id": "F9",
+        "area": "error propagation",
+        "severity": "medium",
+        "observed": "Python rejects an unknown opcode at parse time (ALPFormatError, no result at all); the C implementation accepts the module and traps at runtime with trap.invalid_opcode. Both satisfy \u00a71.9 as written.",
+        "consequence": "The two implementations disagree on whether such an artifact has a canonical result. One produces a hashable trap; the other produces nothing. The spec does not say which is correct, so neither can be called non-conforming.",
+        "recommended_resolution": "Decide whether validation is a parse-time or execution-time obligation, and say so in \u00a71.9. Parse-time rejection is the stricter reading and makes trap.invalid_opcode dead code worth removing from the closed set.",
+        "status": "open \u2014 found by the second implementation, needs a human decision",
+        "decision_owner": "human"
       }
     ],
     "status_legend": {
@@ -716,7 +726,22 @@
     ],
     "findings": "all eight closed",
     "tests": "109 at phase start, 185 now",
-    "honest_caveat": "The invariant is now computable and enforced against a recorded corpus, but it has only ever been checked against one implementation. \u00a76.6 stays partial until a second implementation exists. That is the real test of this phase's work, and it has not happened yet.",
+    "honest_caveat": "A second implementation now exists (impl/c/alpvm.c) and agrees on all 19 golden vectors, so \u00a76.6 is enforced rather than approximated. It found one real bug in the Python runtime and one spec ambiguity (F9) on its first run. Remaining caveat: both implementations share an author, so a misreading common to both would go unnoticed. A third implementation by someone else is the real test, and that has not happened.",
     "next": "phase 2 (intent-compilation-spike, mcp-a2a-adapters) opens when Gaurav says so."
+  },
+  "second_implementation": {
+    "path": "impl/c/alpvm.c",
+    "language": "C",
+    "written": "2026-11-03",
+    "why": "The Python runtime and its tests were written together and agree by construction, so neither could show whether the specs are implementable from the prose alone.",
+    "why_c": "Signed overflow is undefined behaviour in C, so \u00a74.2's 'compute modulo 2^64 and reinterpret as signed' had to be taken literally. A language where wrapping is the default would not have tested that sentence.",
+    "outcome": "18 of 19 golden vectors agreed on the first run; 1 diverged and Python was wrong.",
+    "bug_found": {
+      "symptom": "trap.stack_underflow recorded steps: 0; C produced steps: 1.",
+      "decided_by": "DETERMINISTIC_SEMANTICS.md \u00a71.4 (counter increments before effects) and CANONICAL_ENCODING.md \u00a74 (steps includes the trapping step).",
+      "root_cause": "alp/vm.py's stack guard raised without the execution frame, so steps defaulted to 0 and output produced before the trap was discarded. The second half was exposed by no vector and would have corrupted the hash of any program printing before it underflowed.",
+      "status": "both halves fixed; vector corrected with the correction recorded in spec/golden/vectors.json"
+    },
+    "now_enforced": "\u00a76.6 cross-implementation agreement, previously only a fresh process plus recorded vectors."
   }
 }

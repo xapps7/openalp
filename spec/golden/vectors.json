@@ -241,12 +241,12 @@
       "expected_result": {
         "result_version": "1",
         "outcome": "trap",
-        "steps": 0,
+        "steps": 1,
         "stack": [],
         "output_hex": "",
         "trap_code": "trap.stack_underflow"
       },
-      "expected_hash": "sha256:da9056a217396ad3aac471516172fc9c9c2bf1713743dffaeb9eecdc378b68ab"
+      "expected_hash": "sha256:5e99fb8cef3c17f37efbf8692b25023e23fb1d9424b8e290705f78f6a6627520"
     },
     {
       "id": "trap-ip-out-of-range",
@@ -410,5 +410,42 @@
       },
       "expected_hash": "sha256:cebd7c36453301cb28ee06162721e54c284d8e8079c77c8e7c250bb3b9d4c96c"
     }
-  ]
+  ],
+  "corrections": {
+    "why_this_section_exists": "The rules below forbid regenerating a vector to make a test pass. A vector whose recorded value contradicts the normative spec is a different case: the vector was wrong, not the format. Correcting one silently would be indistinguishable from papering over a regression, so every correction is recorded here with its old value, its new value, and the clause that decided it.",
+    "entries": [
+      {
+        "vector": "trap-stack-underflow",
+        "corrected": "2026-11-03",
+        "was": {
+          "expected_result": {
+            "result_version": "1",
+            "outcome": "trap",
+            "steps": 0,
+            "stack": [],
+            "output_hex": "",
+            "trap_code": "trap.stack_underflow"
+          },
+          "expected_hash": "sha256:da9056a217396ad3aac471516172fc9c9c2bf1713743dffaeb9eecdc378b68ab"
+        },
+        "now": {
+          "expected_result": {
+            "result_version": "1",
+            "outcome": "trap",
+            "steps": 1,
+            "stack": [],
+            "output_hex": "",
+            "trap_code": "trap.stack_underflow"
+          },
+          "expected_hash": "sha256:5e99fb8cef3c17f37efbf8692b25023e23fb1d9424b8e290705f78f6a6627520"
+        }
+      }
+    ],
+    "found_by": "impl/c/alpvm.c, a second implementation written from the specification text. The Python runtime and its tests were written together and agreed with each other, so neither could catch this.",
+    "deciding_clauses": [
+      "DETERMINISTIC_SEMANTICS.md section 1.4 \u2014 the step counter increments once per instruction executed, before that instruction's effects.",
+      "CANONICAL_ENCODING.md section 4 \u2014 `steps` is the steps executed, including the trapping step."
+    ],
+    "root_cause": "alp/vm.py's stack guard raised a trap without the execution frame, so `steps` defaulted to 0 and any output produced before the trap was discarded. Both halves are fixed; the second was not visible in any vector."
+  }
 }

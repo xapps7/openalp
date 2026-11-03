@@ -101,10 +101,10 @@
       },
       "6.6": {
         "tests": [
-          "tests.test_hashing.CrossProcessTests.test_hash_is_stable_across_processes",
-          "tests.test_golden.GoldenVectorTests.test_every_vector_reproduces_its_recorded_result_and_hash"
+          "tests.test_second_implementation.SecondImplementationTests.test_both_implementations_agree_on_every_result",
+          "tests.test_second_implementation.SecondImplementationTests.test_both_implementations_agree_on_every_hash"
         ],
-        "note": "Partial: a fresh process and the recorded vectors stand in for a second implementation. Only a real second implementation closes this."
+        "note": "Enforced against impl/c/alpvm.c, an independent implementation written from the spec text. Caveat: it shares an author with the Python one, so a misreading common to both would go unnoticed. A third implementation by someone else is the real test."
       },
       "7.1": {
         "tests": [

@@ -52,9 +52,24 @@
   - the ratchet immediately caught my own rewrite of semantics §10 for containing an unmapped normative token
   - suite `156` -> `185`; phase 1 complete
 
+### Block 4
+
+- Duration: `2.0h`
+- Focus: a second implementation, to test whether the specs are implementable from the text
+- Output:
+  - `impl/c/alpvm.c` — independent C implementation written from the two spec documents, no dependencies, SHA-256 inline
+  - C chosen because signed overflow is undefined there, so §4.2's "modulo 2^64, reinterpret as signed" had to be taken literally
+  - first run: 18 of 19 golden vectors agreed, 1 diverged, **and Python was the wrong one**
+  - bug: the stack guard raised without the execution frame, so `trap.stack_underflow` reported `steps: 0` instead of 1, and output produced before the trap was discarded entirely
+  - the second half was exposed by no vector and would have corrupted the hash of any program printing before it underflowed
+  - vector corrected with the old value, new value and deciding clauses recorded in `spec/golden/vectors.json`
+  - after the fix: 19 of 19 agree on both result and hash
+  - §6.6 cross-implementation agreement is now enforced, not approximated
+  - new finding F9: Python rejects unknown opcodes at parse, C traps at runtime, and the spec does not say which is right
+
 ### Total
 
-- `7.0h`
+- `9.0h`
 
 ## 2026-08-27
 

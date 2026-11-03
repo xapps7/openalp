@@ -8,3 +8,6 @@ __pycache__/
 /samples/hello_demo.alp
 /samples/hello_from_raw.alp
 /tmp/
+
+# second-implementation build artifact
+/impl/c/alpvm
